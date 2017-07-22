@@ -27,6 +27,17 @@ function brew_tap_kegs() {
   fi
 }
 
+# Uninstall Homebrew recipes.
+function brew_uninstall_stray_recipes() {
+  recipes=($(setdiff "$(brew list)" "${recipes[*]}"))
+  if (( ${#recipes[@]} > 0 )); then
+    e_header "Uninstalling Homebrew recipes: ${recipes[*]}"
+    for recipe in "${recipes[@]}"; do
+      brew uninstall $recipe
+    done
+  fi
+}
+
 # Install Homebrew recipes.
 function brew_install_recipes() {
   recipes=($(setdiff "${recipes[*]}" "$(brew list)"))
