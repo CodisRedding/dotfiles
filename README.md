@@ -101,7 +101,7 @@ Why? Because I often completely break this repo while updating. Which means that
 #### Ubuntu
 
 ```sh
-export DOTFILES_GH_USER=codisredding
+export DOTFILES_GH_USER=<username>
 export DOTFILES_GH_BRANCH=master
 bash -c "$(wget -qO- https://raw.github.com/$DOTFILES_GH_USER/dotfiles/$DOTFILES_GH_BRANCH/bin/dotfiles)" && source ~/.bashrc
 ```
@@ -109,7 +109,7 @@ bash -c "$(wget -qO- https://raw.github.com/$DOTFILES_GH_USER/dotfiles/$DOTFILES
 #### macOS
 
 ```sh
-export DOTFILES_GH_USER=codisredding
+export DOTFILES_GH_USER=<username>
 export DOTFILES_GH_BRANCH=master
 bash -c "$(curl -fsSL https://raw.github.com/$DOTFILES_GH_USER/dotfiles/$DOTFILES_GH_BRANCH/bin/dotfiles)" && source ~/.bashrc
 ```
@@ -123,13 +123,13 @@ There's a lot of stuff that requires admin access via `sudo`, so be warned that 
 #### Ubuntu
 
 ```sh
-bash -c "$(wget -qO- https://bit.ly/codisredding-dotfiles)" && source ~/.bashrc
+bash -c "$(wget -qO- https://bit.ly/codisredding-dotfile)" && source ~/.bashrc
 ```
 
 #### macOS
 
 ```sh
-bash -c "$(curl -fsSL https://bit.ly/codisredding-dotfiles)" && source ~/.bashrc
+bash -c "$(curl -fsSL https://bit.ly/codisredding-dotfile)" && source ~/.bashrc
 ```
 
 ## Aliases and Functions
