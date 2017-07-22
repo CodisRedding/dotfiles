@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 [[ "$1" == "source" ]] || \
 
-echo 'Dotfiles - "Codisredding" Rocky Assad - http://benalman.com/'
+echo 'Dotfiles - "Codisredding" Rocky Assad - https://github.com/CodisRedding/dotfiles'
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then cat <<HELP
 
