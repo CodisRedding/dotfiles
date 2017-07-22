@@ -18,42 +18,40 @@ brew cask info this-is-somewhat-annoying 2>/dev/null
 # Homebrew casks
 casks=(
   # Applications
-  a-better-finder-rename
-  android-platform-tools
-  battle-net
-  bettertouchtool
-  charles
+  1password
+  atom
+  bartender
+  caffeine
+  carbon-copy-cloner
   chromium
-  chronosync
-  controllermate
   docker
   dropbox
-  fastscripts
   firefox
+  flux
+  google-chrome
   gyazo
-  hex-fiend
+  hipchat
   iterm2
-  karabiner-elements
-  launchbar
+  iterm2
+  java
+  jing
+  kaleidoscope
   macvim
-  messenger-for-desktop
-  midi-monitor
   moom
-  omnidisksweeper
-  race-for-the-galaxy
-  reaper
+  mysqlqorkbench
+  parallels-desktop
+  postman
   robo-3t
   screenhero
-  scroll-reverser
   skype
+  skype-for-business
   slack
   sourcetree
+  spectacle
   spotify
   steam
-  the-unarchiver
-  totalfinder
   tower
-  vagrant
+  transmission
   virtualbox
   vlc
   ynab
@@ -73,8 +71,6 @@ casks=(
   colorpicker-developer
   colorpicker-skalacolor
   # Drivers
-  sonos
-  xbox360-controller-driver
   # Fonts
   font-m-plus
   font-mplus-nerd-font
@@ -87,6 +83,16 @@ if (( ${#casks[@]} > 0 )); then
   e_header "Installing Homebrew casks: ${casks[*]}"
   for cask in "${casks[@]}"; do
     brew cask install $cask
+  done
+  brew cask cleanup
+fi
+
+# Removes casks that are no longer in the recipes list
+casks=($(setdiff "$(brew cask list 2>/dev/null)" "${casks[*]}"))
+if (( ${#casks[@]} > 0 )); then
+  e_header "Uninstalling Homebrew casks: ${casks[*]}"
+  for cask in "${casks[@]}"; do
+    brew cask uninstall $cask
   done
   brew cask cleanup
 fi

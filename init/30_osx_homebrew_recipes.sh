@@ -6,24 +6,31 @@ is_osx || return 1
 
 # Homebrew recipes
 recipes=(
+  ack
   ansible
   awscli
   bash
-  cmatrix
+  bash-completion
   coreutils
-  cowsay
+  ctags-exuberant
+  gist
   git
   git-extras
+  git-flow-avh
+  go
   htop-osx
   hub
-  id3tool
+  irssi
   jq
   lesspipe
+  macvim --HEAD --with-laujit --with-override-system-vim
   man2html
   mercurial
+  mysql
   nmap
   postgresql
   reattach-to-user-namespace
+  redis
   sl
   ssh-copy-id
   terminal-notifier
@@ -37,6 +44,9 @@ brew_install_recipes
 
 # Misc cleanup!
 
+# Removes recipes that are no longer in the recipes list
+brew_uninstall_stray_recipes
+
 # This is where brew stores its binary symlinks
 local binroot="$(brew --config | awk '/HOMEBREW_PREFIX/ {print $2}')"/bin
 
@@ -49,8 +59,7 @@ fi
 
 # bash
 if [[ "$(type -P $binroot/bash)" && "$(cat /etc/shells | grep -q "$binroot/bash")" ]]; then
-  e_header "Adding $binroot/bash to the list of acceptable shells"
-  echo "$binroot/bash" | sudo tee -a /etc/shells >/dev/null
+  e_header "Adding $binroot/bash to the list of acceptable shells" echo "$binroot/bash" | sudo tee -a /etc/shells >/dev/null
 fi
 if [[ "$(dscl . -read ~ UserShell | awk '{print $2}')" != "$binroot/bash" ]]; then
   e_header "Making $binroot/bash your default shell"
