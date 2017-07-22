@@ -35,7 +35,6 @@ casks=(
   java
   jing
   kaleidoscope
-  macvim --HEAD --with-lua --with-luajit --with-override-system-vim
   moom
   mysqlworkbench
   parallels-desktop
