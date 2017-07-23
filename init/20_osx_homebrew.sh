@@ -33,7 +33,7 @@ function brew_install_recipes() {
   if (( ${#recipes[@]} > 0 )); then
     e_header "Installing Homebrew recipes: ${recipes[*]}"
     for recipe in "${recipes[@]}"; do
-      echo "________________________________>>> $recipe"
+      echo "-----------------> $recipe"
       brew install $recipe
     done
   fi

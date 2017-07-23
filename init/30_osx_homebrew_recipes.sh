@@ -23,7 +23,7 @@ recipes=(
   irssi
   jq
   lesspipe
-  "macvim --HEAD --with-lua --with-luajit --with-override-system-vim"
+  \"macvim --HEAD --with-lua --with-luajit --with-override-system-vim\"
   man2html
   mercurial
   mysql
