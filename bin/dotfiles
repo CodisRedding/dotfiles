@@ -241,7 +241,8 @@ function setdiff() {
   if [[ "$1" == 1 ]]; then debug=1; shift; fi
   if [[ "$1" ]]; then
     local setdiff_new setdiff_cur setdiff_out
-    setdiff_new=("$1"); setdiff_cur=("$2")
+    setdiff_new=($1); setdiff_cur=($2)
+    setdiff_new=("${setdiff_new[@]}"); setdiff_cur=("${setdiff_cur[@]}")
   fi
   setdiff_out=()
   for a in "${setdiff_new[@]}"; do
