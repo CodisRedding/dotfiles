@@ -79,7 +79,6 @@ casks=($(setdiff "${casks[*]}" "$(brew cask list 2>/dev/null)"))
 if (( ${#casks[@]} > 0 )); then
   e_header "Installing Homebrew casks: ${casks[*]}"
   for cask in "${casks[@]}"; do
-    echo "INSTALLING: $cask"
     brew cask install $cask
   done
   brew cask cleanup
