@@ -237,6 +237,7 @@ function n_times_i() {
 # (and not in a good way).
 # From http://stackoverflow.com/a/1617303/142339
 function setdiff() {
+  echo "############################ IFS = $IFS"
   local debug skip a b
   if [[ "$1" == 1 ]]; then debug=1; shift; fi
   if [[ "$1" ]]; then
