@@ -35,6 +35,7 @@ function brew_install_recipes() {
     for recipe in "${recipes[@]}"; do
       echo "-----------------> $recipe"
       echo "-----------------> ${recipe//^/ }"
+      echo "-----------------> brew install ${recipe//^/ }"
       brew install "${recipe//^/ }"
     done
   fi
