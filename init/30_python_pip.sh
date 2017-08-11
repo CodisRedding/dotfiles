@@ -14,7 +14,7 @@ if (( ${#pip_packages[@]} > 0 )); then
   e_header "Installing pip packages (${#pip_packages[@]})"
   for package in "${pip_packages[@]}"; do
     e_arrow "$package"
-    pip install "$package"
+    sudo pip install "$package"
   done
 fi
 
