@@ -285,7 +285,7 @@ call plug#end()
 """""""""""""""""""""""""""""""""
 "set background=dark
 " Access colors present in 256 colorspace
-let base16colorspace=256  
+"let base16colorspace=256  
 colorscheme base16-default-dark
 " base16-helper updates theme automagically
 if filereadable(expand("~/.vimrc_background"))
