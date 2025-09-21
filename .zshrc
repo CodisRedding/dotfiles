@@ -1,3 +1,13 @@
+# Uncomment to disable dotfiles git status warning
+# export DOTFILES_NO_GIT_WARN=1
+
+# Warn if there are uncommitted changes in dotfiles repo (unless disabled)
+if [[ -d "$HOME/dotfiles/.git" && -z "$DOTFILES_NO_GIT_WARN" ]]; then
+  if git -C "$HOME/dotfiles" status --porcelain | grep -q .; then
+    echo "%F{yellow}⚠️  You have uncommitted changes in your ~/dotfiles repo!%f"
+    echo "Run 'cd ~/dotfiles && git status' to review. Set DOTFILES_NO_GIT_WARN=1 to disable this message."
+  fi
+fi
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # --- prompt Performance ---
