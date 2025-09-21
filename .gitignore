@@ -1,0 +1,38 @@
+# Ignore editor swap, history, and cache files
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+*.DS_Store
+.zsh_history
+.bash_history
+.node_repl_history
+.lesshst
+.viminfo
+.zcompdump*
+.zsh_sessions/
+.bash_sessions/
+.cache/
+.Trash/
+
+# Ignore tool/IDE state
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore system files
+.CFUserTextEncoding
+
+# Ignore sensitive files (uncomment if you want to be extra safe)
+# .ssh/
+# .gnupg/
+# .aws/
+# .kube/
+# .azure/
+# .minikube/
+# .docker/
+
+# Ignore VS Code and JetBrains IDE settings
+.vscode/
+.idea/
