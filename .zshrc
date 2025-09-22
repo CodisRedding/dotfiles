@@ -4,7 +4,7 @@
 # warn if there are uncommitted changes in dotfiles repo (unless disabled)
 if [[ -d "$HOME/dotfiles/.git" && -z "$DOTFILES_NO_GIT_WARN" ]]; then
   if git -C "$HOME/dotfiles" status --porcelain | grep -q .; then
-    print -P "%F{yellow}⚠️  Uncommitted changes in ~/dotfiles. (set DOTFILES_NO_GIT_WARN=1 to disable)%f"
+    print -P "%F{yellow}⚠️  Uncommitted changes in ~/dotfiles.%f"
   fi
 fi
 
@@ -165,14 +165,6 @@ eval "$(gh completion -s zsh)" # enable github cli tab completion
 bindkey '»' zsh_gh_copilot_explain  # bind Option+shift+\ to explain
 bindkey '«' zsh_gh_copilot_suggest  # bind Option+\ to suggest
 
-# environment variables
-export KUBECONFIG=~/code/jenkins-config.cfg
-export MSBuildSDKsPath=/opt/homebrew/Cellar/mono/6.14.1/lib/mono/msbuild
-export MONO_GAC_PREFIX="/opt/homebrew"
-export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
-export JAVA_HOME="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
-export MSBuildEnableWorkloadResolver=false
-export MSBuildSDKsPath="/usr/local/share/dotnet/sdk/$(dotnet --version)/Sdks"
 
 # Enable shell integration for VS Code if running in VS Code terminal
 # This allows VS Code to provide better terminal integration features.
