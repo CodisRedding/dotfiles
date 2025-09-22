@@ -3,6 +3,7 @@
 # This ensures tools and system-wide settings are always available, even for GUI apps or remote sessions.
 # Aliases and interactive settings should remain in .zshrc.
 
+export EDITOR="vim" # Set default editor to Vim
 export KUBECONFIG=~/code/jenkins-config.cfg # Set KUBECONFIG path for Kubernetes configuration
 # needed to build or run a .NET Framework (not .NET Core/5+/6+) project on macOS.
 export MONO_GAC_PREFIX="/opt/homebrew" # Set Mono GAC prefix for Homebrew installation
