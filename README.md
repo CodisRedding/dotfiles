@@ -9,16 +9,28 @@ Easily manage and sync your personal configuration files across machines using t
 This repository currently includes:
 
 - `.zshrc` — Zsh shell configuration (with Oh My Zsh, plugins, aliases, and more)
+- `.zprofile` — Zsh profile script, runs at login (for environment variables, etc.)
+- `.bash_profile` — Bash shell profile script (for Bash users or compatibility)
 - `.npmrc` — npm configuration
+- `.yarnrc` — Yarn package manager configuration
+- `.gitconfig` — Git configuration (user info, aliases, etc.)
+- `.gitignore` — Global Git ignore patterns
 
-You can add more files as needed (e.g., `.vimrc`, `.gitconfig`).
+> **Note:** Some files may not be symlinked by default. Review and link only those relevant to your setup.
+
+You can add more files as needed (e.g., `.vimrc`).
 
 ## Example Directory Structure
 
-```
+```text
 dotfiles/
 ├── .zshrc
+├── .zprofile
+├── .bash_profile
 ├── .npmrc
+├── .yarnrc
+├── .gitconfig
+├── .gitignore
 └── README.md
 ```
 
@@ -27,7 +39,7 @@ dotfiles/
 Clone this repo and symlink the configs:
 
 ```sh
-git clone https://github.com/yourusername/dotfiles.git ~/dotfiles
+git clone https://gitlab.com/<yourusername>/dotfiles.git ~/dotfiles
 ln -sf ~/dotfiles/.zshrc ~/.zshrc
 ln -sf ~/dotfiles/.npmrc ~/.npmrc
 ```
@@ -41,14 +53,13 @@ ln -sf ~/dotfiles/.npmrc ~/.npmrc
 
 ## Troubleshooting
 
-- **Existing config files:** If you already have a `.zshrc` or `.npmrc`, back them up before symlinking.
-- **Symlink issues:** Use `ls -l ~/.zshrc` to verify the symlink points to the right file.
+- **Existing config files:** If you already have dot files, back them up before symlinking.
+- **Symlink issues:** Use `ls -l ~/.<filename>` to verify the symlink points to the right file.
 - **Permissions:** Ensure you have the correct permissions for your home directory and dotfiles.
 
 ## Customization & Contributions
 
 - Fork or clone and add your own dotfiles.
-- Edit `.zshrc` to add aliases, plugins, or environment variables.
 - PRs and suggestions are welcome!
 
 ## Automate Setup (Optional)
