@@ -5,8 +5,12 @@
 if [[ -d "$HOME/dotfiles/.git" && -z "$DOTFILES_NO_GIT_WARN" ]]; then
   if git -C "$HOME/dotfiles" status --porcelain | grep -q .; then
     print -P "%F{yellow}⚠️  Uncommitted changes in ~/dotfiles.%f"
+    print -P "%F{cyan}💡 Use 'dotpush' to quickly commit and push your dotfiles.%f"
   fi
 fi
+
+# quick alias to add, commit, and push all changes in dotfiles
+alias dotpush='cd ~/dotfiles && git add . && git commit -m "update dotfiles" && git push && cd -'
 
 # load homebrew environment
 eval "$(/opt/homebrew/bin/brew shellenv)"
