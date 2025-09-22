@@ -41,7 +41,8 @@ zstyle ':omz:update' mode reminder
 COMPLETION_WAITING_DOTS="true" 
 
 # plugins to load (plugins can be found in ~/.oh-my-zsh/plugins/*)
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-github-copilot docker docker-compose aliases kubectl macos)
+# add (docker docker-compose kubectl) when needed to avoid slowing down shell startup
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-github-copilot aliases macos)
 source $ZSH/oh-my-zsh.sh 
 
 # load fzf and fzf-tab only if not in VS Code terminal
@@ -145,7 +146,7 @@ alias record='asciinema rec -c "zsh" ~/code/asciinema/$(date +%Y-%m-%d_%H-%M-%S)
 alias play='asciinema play' # play a recorded terminal session
 alias listrecords='ls ~/code/asciinema' # list recorded terminal sessions
 # Press Ctrl+D (or type exit and press Enter) in the terminal where you started the recording.
-alias stoprecord='exit"' # stop recording terminal session
+alias stoprecord='exit' # stop recording terminal session
 
 # kap
 alias kap='open -a Kap' # open kap app
