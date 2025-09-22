@@ -10,7 +10,7 @@ if [[ -d "$HOME/dotfiles/.git" && -z "$DOTFILES_NO_GIT_WARN" ]]; then
 fi
 
 # quick alias to add, commit, and push all changes in dotfiles
-alias dotpush='cd ~/dotfiles && git add . && git commit -m "update dotfiles" && git push && cd -'
+alias dotpush='cd ~/dotfiles && git add . && git commit -m "updated dotfiles using quick dotpush cmd" && git push && cd -'
 
 # load homebrew environment
 eval "$(/opt/homebrew/bin/brew shellenv)"
