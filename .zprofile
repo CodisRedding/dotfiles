@@ -8,5 +8,6 @@ export KUBECONFIG=~/code/jenkins-config.cfg # Set KUBECONFIG path for Kubernetes
 export MONO_GAC_PREFIX="/opt/homebrew" # Set Mono GAC prefix for Homebrew installation
 export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH" # Add OpenJDK 17 to PATH
 export JAVA_HOME="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home" # Set JAVA_HOME for OpenJDK 17
+# The MSBuildEnableWorkloadResolver environment variable controls whether MSBuild tries to automatically resolve and install missing .NET workloads
 export MSBuildEnableWorkloadResolver=false # Disable automatic workload installation
 export PATH="$PATH:/Users/rocky.assad/.dotnet/tools" # Add .NET tools to PATH
