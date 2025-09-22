@@ -1,17 +1,17 @@
 # Uncomment to disable dotfiles git status warning
 # export DOTFILES_NO_GIT_WARN=1
 
-# Warn if there are uncommitted changes in dotfiles repo (unless disabled)
+# warn if there are uncommitted changes in dotfiles repo (unless disabled)
 if [[ -d "$HOME/dotfiles/.git" && -z "$DOTFILES_NO_GIT_WARN" ]]; then
   if git -C "$HOME/dotfiles" status --porcelain | grep -q .; then
-    echo "%F{yellow}⚠️  Uncommitted changes in ~/dotfiles. (set DOTFILES_NO_GIT_WARN=1 to disable)%f"
+    print -P "%F{yellow}⚠️  Uncommitted changes in ~/dotfiles. (set DOTFILES_NO_GIT_WARN=1 to disable)%f"
   fi
 fi
 
-# Load Homebrew environment
+# load homebrew environment
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-# --- prompt Performance ---
+# prompt performance
 zstyle ':completion:*' rehash true
 
 # path to your Oh My Zsh installation.
@@ -21,9 +21,10 @@ export ZSH="$HOME/.oh-my-zsh"
 autoload -Uz compinit
 compinit
 
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-# ZSH_THEME="clean"
-ZSH_THEME="" # disable ohmyzsh theme to use homebrew insalled pure prompt
+# theme settings
+# See: https://github.com/sindresorhus/pure
+# See: https://github.com/ohmyzsh/ohmyzsh/wiki/Themes 
+ZSH_THEME="" # disable ohmyzsh theme to use homebrew installed pure prompt
 
 # zsh history settings
 HISTSIZE=10000 # number of history entries stored in memory
@@ -33,7 +34,7 @@ setopt INC_APPEND_HISTORY SHARE_HISTORY # immediately append to the history file
 setopt HIST_IGNORE_ALL_DUPS # ignore duplicate entries
 setopt HIST_REDUCE_BLANKS # remove superfluous blanks
 
-# just remind me to update when it's time
+# omz update reminder
 zstyle ':omz:update' mode reminder 
 
 # show waiting dots when completion is delayed
@@ -74,7 +75,7 @@ export NVM_DIR="$HOME/.nvm"
 alias ip='ipconfig getifaddr en0' # get local IP address
 
 ## copilot aliases
-# Alias to show directory info, git status, and git directories
+# alias to show directory info, git status, and git directories
 alias info='echo "Current directory: $(pwd)"; echo; if git rev-parse --is-inside-work-tree &>/dev/null; then echo "This directory is a git repository."; else echo "This directory is NOT a git repository."; fi; echo; echo "Other .git directories under this tree:"; find . -type d -name .git | tee >(echo "Total: $(wc -l | awk "{print \$1}")")'
 
 ## ssh aliases
@@ -152,9 +153,11 @@ alias kap='open -a Kap' # open kap app
 # generate a new GUID and copy it to the clipboard
 alias copyApiKey='file=$(find . -name "appsettings.Local.json" -not -path "*/bin/*" -not -path "*/obj/*" -print -quit) && jq -r ".ApiKey" "$file" | tr -d "\n" | tee >(pbcopy) && echo "API key copied to clipboard from $file."'
 
+# angular and docker CLI tab completions
 source <(ng completion script) # enable angular cli tab completion
 fpath=(/Users/rocky.assad/.docker/completions $fpath) # enable docker cli tab completion
 
+# github copilot cli
 eval "$(gh copilot alias -- zsh)" # enable github copilot cli
 eval "$(gh completion -s zsh)" # enable github cli tab completion
 
@@ -162,6 +165,7 @@ eval "$(gh completion -s zsh)" # enable github cli tab completion
 bindkey '»' zsh_gh_copilot_explain  # bind Option+shift+\ to explain
 bindkey '«' zsh_gh_copilot_suggest  # bind Option+\ to suggest
 
+# environment variables
 export KUBECONFIG=~/code/jenkins-config.cfg
 export MSBuildSDKsPath=/opt/homebrew/Cellar/mono/6.14.1/lib/mono/msbuild
 export MONO_GAC_PREFIX="/opt/homebrew"
