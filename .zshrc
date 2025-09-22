@@ -41,8 +41,19 @@ zstyle ':omz:update' mode reminder
 COMPLETION_WAITING_DOTS="true" 
 
 # plugins to load (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# add (docker docker-compose kubectl) when needed to avoid slowing down shell startup
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-github-copilot aliases macos)
+plugins=(
+  git                     # Useful git aliases and functions
+  zsh-autosuggestions     # Suggests commands as you type based on history
+  zsh-syntax-highlighting # Highlights command syntax for better readability
+  zsh-github-copilot      # GitHub Copilot CLI integration for shell
+  aliases                 # Loads extra useful aliases
+  macos                   # macOS-specific helpers and shortcuts
+  # docker                # Docker aliases and functions (uncomment when needed)
+  # docker-compose        # Docker Compose aliases and functions (uncomment when needed)
+  # kubectl               # kubectl aliases and functions (uncomment when needed)
+)
+
+# load oh-my-zsh
 source $ZSH/oh-my-zsh.sh 
 
 # load fzf and fzf-tab only if not in VS Code terminal
