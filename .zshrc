@@ -7,6 +7,8 @@ if [[ -d "$HOME/dotfiles/.git" && -z "$DOTFILES_NO_GIT_WARN" ]]; then
     echo "%F{yellow}⚠️  Uncommitted changes in ~/dotfiles. (set DOTFILES_NO_GIT_WARN=1 to disable)%f"
   fi
 fi
+
+# Load Homebrew environment
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # --- prompt Performance ---
