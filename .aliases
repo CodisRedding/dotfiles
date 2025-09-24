@@ -88,4 +88,3 @@ alias kap='open -a Kap' # open kap app
 
 # generate a new GUID and copy it to the clipboard
 alias copyApiKey='file=$(find . -name "appsettings.Local.json" -not -path "*/bin/*" -not -path "*/obj/*" -print -quit) && jq -r ".ApiKey" "$file" | tr -d "\n" | tee >(pbcopy) && echo "API key copied to clipboard from $file."'
-
