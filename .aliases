@@ -1,20 +1,4 @@
-# Uncomment to disable dotfiles git status warning
-# export DOTFILES_NO_GIT_WARN=1
-
-
-# warn if there are uncommitted changes in dotfiles repo (unless disabled)
-if [[ -d "$HOME/dotfiles/.git" && -z "$DOTFILES_NO_GIT_WARN" ]]; then
-  if git -C "$HOME/dotfiles" status --porcelain | grep -q .; then
-    print -P "%F{yellow}⚠️  Uncommitted changes in ~/dotfiles.%f"
-    print -P "%F{cyan}💡 Use 'dotpush' to quickly commit and push your dotfiles.%f"
-  fi
-fi
-
-# warn if Brewfile is out of sync with installed packages
-if ! brew bundle check --file="$HOME/dotfiles/Brewfile" &>/dev/null; then
-  print -P "%F{yellow}⚠️  Your Brewfile is out of sync with installed packages. Run 'brew bundle dump --file=~/dotfiles/Brewfile --force' to update.%f"
-fi
-
+# Custom Aliases for Zsh
 
 # quick alias to add, commit, and push all changes in dotfiles
 alias dotpush='cd ~/dotfiles && git add . && git commit -m "updated dotfiles using quick dotpush cmd" && git push && cd -'
@@ -23,91 +7,12 @@ alias dotpush='cd ~/dotfiles && git add . && git commit -m "updated dotfiles usi
 # Usage: Run 'brewupdate' to overwrite Brewfile with your current setup
 alias brewupdate='brew bundle dump --file=~/dotfiles/Brewfile --force'
 
-# load homebrew environment
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
-# prompt performance
-zstyle ':completion:*' rehash true
-
-
-# path to your Oh My Zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
-
-# Load custom aliases
-[ -f "$HOME/dotfiles/.aliases" ] && source "$HOME/dotfiles/.aliases"
-
-# enable advanced tab-completion in your Zsh
-autoload -Uz compinit
-compinit
-
-# theme settings
-# See: https://github.com/sindresorhus/pure
-# See: https://github.com/ohmyzsh/ohmyzsh/wiki/Themes 
-ZSH_THEME="" # disable ohmyzsh theme to use homebrew installed pure prompt
-
-# zsh history settings
-HISTSIZE=10000 # number of history entries stored in memory
-SAVEHIST=10000 # number of history entries stored in the history file
-HISTFILE=~/.zsh_history # path to the history file
-setopt INC_APPEND_HISTORY SHARE_HISTORY # immediately append to the history file and share history across sessions
-setopt HIST_IGNORE_ALL_DUPS # ignore duplicate entries
-setopt HIST_REDUCE_BLANKS # remove superfluous blanks
-
-# omz update reminder
-zstyle ':omz:update' mode reminder 
-
-# show waiting dots when completion is delayed
-COMPLETION_WAITING_DOTS="true" 
-
-# plugins to load (plugins can be found in ~/.oh-my-zsh/plugins/*)
-plugins=(
-  git                     # Useful git aliases and functions
-  zsh-autosuggestions     # Suggests commands as you type based on history
-  zsh-syntax-highlighting # Highlights command syntax for better readability
-  zsh-github-copilot      # GitHub Copilot CLI integration for shell
-  aliases                 # Loads extra useful aliases
-  macos                   # macOS-specific helpers and shortcuts
-  # docker                # Docker aliases and functions (uncomment when needed)
-  # docker-compose        # Docker Compose aliases and functions (uncomment when needed)
-  # kubectl               # kubectl aliases and functions (uncomment when needed)
-)
-
-# load oh-my-zsh
-source $ZSH/oh-my-zsh.sh 
-
-# load fzf and fzf-tab only if not in VS Code terminal
-if [[ "$TERM_PROGRAM" != "vscode" ]]; then
-  # fzf settings
-  if command -v fzf &>/dev/null; then
-    source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
-    source /opt/homebrew/opt/fzf/shell/completion.zsh
-    source <(fzf --zsh)
-    zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
-  fi
-
-  # fzf-tab plugin
-  source "$ZSH_CUSTOM/plugins/fzf-tab/fzf-tab.plugin.zsh"
-  zstyle ':completion:*' fzf-preview 'cat {}'
-  zstyle ':completion:*' menu select
-  # echo "fzf-tab loaded: $ZSH_CUSTOM/plugins/fzf-tab"
-fi
-
-# pure prompt setup
-zstyle :prompt:pure:git:stash show yes
-autoload -U promptinit; promptinit 
-prompt pure 
-
-# nvm setup
-export NVM_DIR="$HOME/.nvm"
-  [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
-  [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
-
 ## aliases
 alias ip='ipconfig getifaddr en0' # get local IP address
 
 ## copilot aliases
 # alias to show directory info, git status, and git directories
-alias info='echo "Current directory: $(pwd)"; echo; if git rev-parse --is-inside-work-tree &>/dev/null; then echo "This directory is a git repository."; else echo "This directory is NOT a git repository."; fi; echo; echo "Other .git directories under this tree:"; find . -type d -name .git | tee >(echo "Total: $(wc -l | awk "{print \$1}")")'
+alias info='echo "Current directory: $(pwd)"; echo; if git rev-parse --is-inside-work-tree &>/dev/null; then echo "This directory is a git repository."; else echo "This directory is NOT a git repository."; fi; echo; echo "Other .git directories under this tree:"; find . -type d -name .git | tee >(echo "Total: $(wc -l | awk \"{print $1}\")")'
 
 ## ssh aliases
 alias ssh-bitbucket="ssh bitbucket.org"
@@ -184,20 +89,3 @@ alias kap='open -a Kap' # open kap app
 # generate a new GUID and copy it to the clipboard
 alias copyApiKey='file=$(find . -name "appsettings.Local.json" -not -path "*/bin/*" -not -path "*/obj/*" -print -quit) && jq -r ".ApiKey" "$file" | tr -d "\n" | tee >(pbcopy) && echo "API key copied to clipboard from $file."'
 
-# angular and docker CLI tab completions
-source <(ng completion script) # enable angular cli tab completion
-fpath=(/Users/rocky.assad/.docker/completions $fpath) # enable docker cli tab completion
-
-# github copilot cli
-eval "$(gh copilot alias -- zsh)" # enable github copilot cli
-eval "$(gh completion -s zsh)" # enable github cli tab completion
-
-# zsh-github-copilot key bindings
-bindkey '»' zsh_gh_copilot_explain  # bind Option+shift+\ to explain
-bindkey '«' zsh_gh_copilot_suggest  # bind Option+\ to suggest
-
-
-# Enable shell integration for VS Code if running in VS Code terminal
-# This allows VS Code to provide better terminal integration features.
-# Note: This line is only necessary if you are using the VS Code terminal.
-[[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh)"
