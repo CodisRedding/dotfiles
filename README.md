@@ -94,7 +94,6 @@ This will:
 - Make sure you have Homebrew installed: [https://brew.sh](https://brew.sh)
 - For VS Code extensions, you need the `code` command available in your PATH.
 
-
 ### Keeping Homebrew Up to Date
 
 To update Homebrew itself (the package manager and its formulae/casks list):
