@@ -8,46 +8,65 @@ Easily manage and sync your personal configuration files across machines using t
 
 This repository currently includes:
 
-- `.zshrc` — Zsh shell configuration (with Oh My Zsh, plugins, aliases, and more)
-- `.zprofile` — Zsh profile script, runs at login (for environment variables, etc.)
-- `.bash_profile` — Bash shell profile script (for Bash users or compatibility)
-- `.npmrc` — npm configuration
-- `.yarnrc` — Yarn package manager configuration
-- `.gitconfig` — Git configuration (user info, aliases, etc.)
-- `.gitignore` — Global Git ignore patterns
-- `.aliases` — Centralized shell aliases (sourced by `.zshrc`)
+Most user-facing configuration files live under the `home/` directory and are
+intended to be installed into your real `$HOME` as symlinks. For example the
+repo file `home/.zshrc` should be linked to `~/.zshrc` on your machine.
+
+Common files included (examples — check `git ls-files` for the authoritative list):
+
+- `home/.zshrc` — Zsh shell configuration (with plugins, aliases, etc.)
+- `home/.zprofile` — Zsh profile script (login-time environment variables)
+- `home/.bash_profile` — Bash profile script (for Bash compatibility)
+- `home/.npmrc` — npm configuration
+- `home/.yarnrc` — Yarn configuration
+- `home/.gitconfig` — Git configuration (user info, aliases, etc.)
+- `.gitignore` — Repo-level ignore (not installed into $HOME)
 - `Brewfile` — Homebrew/cask/tap/extensions list for easy setup (generated with `brew bundle dump`)
 
-> **Note:** Some files may not be symlinked by default. Review and link only those relevant to your setup.
-
-You can add more files as needed (e.g., `.vimrc`).
+Note: some repo-owned helper files (like `README.md`, scripts, and the `Brewfile`)
+stay at the repo root and are not intended to be symlinked into your home.
 
 ## Example Directory Structure
 
 ```text
 dotfiles/
-├── .zshrc
-├── .zprofile
-├── .bash_profile
-├── .npmrc
-├── .yarnrc
-├── .gitconfig
-├── .gitignore
-├── .aliases
+├── home/
+│   ├── .zshrc
+│   ├── .zprofile
+│   ├── .bash_profile
+│   ├── .npmrc
+│   ├── .yarnrc
+│   └── .gitconfig
+├── scripts/
+│   └── check_dotfiles_symlinks.sh
 ├── Brewfile
+└── README.md
 ```
 
 ## Quick Setup
 
-Clone this repo and symlink the configs:
+Clone this repo and use the included helper to install the `home/` files into
+your `$HOME` safely.
 
 ```sh
 git clone https://gitlab.com/<yourusername>/dotfiles.git ~/dotfiles
-ln -sf ~/dotfiles/.zshrc ~/.zshrc
-ln -sf ~/dotfiles/.npmrc ~/.npmrc
+
+# preview changes (dry-run)
+bash ~/dotfiles/scripts/check_dotfiles_symlinks.sh --dry-run
+
+# apply: creates timestamped backups of existing files and replaces them with
+# symlinks pointing at files under ~/dotfiles/home
+bash ~/dotfiles/scripts/check_dotfiles_symlinks.sh --apply
 ```
 
-> **Tip:** Use `-sf` to force and overwrite existing symlinks.
+If you prefer to manage a single file manually, point the symlink at the
+corresponding path under `home/`, for example:
+
+```sh
+ln -sf ~/dotfiles/home/.zshrc ~/.zshrc
+```
+
+Tip: run the `--dry-run` first to confirm what will change.
 
 ## OS Notes
 
@@ -125,3 +144,5 @@ For advanced users, automate installation and updates with tools like:
 - [chezmoi](https://www.chezmoi.io/)
 - [yadm](https://yadm.io/)
 - [dotbot](https://github.com/anishathalye/dotbot)
+
+
