@@ -26,7 +26,7 @@ zstyle ':completion:*' rehash true
 export ZSH="$HOME/.oh-my-zsh"
 
 # Load custom aliases
-[ -f "$HOME/dotfiles/.aliases" ] && source "$HOME/dotfiles/.aliases"
+[ -f "$HOME/dotfiles/home/.aliases" ] && source "$HOME/dotfiles/home/.aliases"
 
 # enable advanced tab-completion in your Zsh
 autoload -Uz compinit

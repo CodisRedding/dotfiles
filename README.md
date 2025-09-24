@@ -144,5 +144,3 @@ For advanced users, automate installation and updates with tools like:
 - [chezmoi](https://www.chezmoi.io/)
 - [yadm](https://yadm.io/)
 - [dotbot](https://github.com/anishathalye/dotbot)
-
-
