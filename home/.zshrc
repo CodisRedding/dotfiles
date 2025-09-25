@@ -12,7 +12,8 @@ fi
 
 # warn if Brewfile is out of sync with installed packages
 if ! brew bundle check --file="$HOME/dotfiles/Brewfile" &>/dev/null; then
-  print -P "%F{yellow}⚠️  Your Brewfile is out of sync with installed packages. Run 'brew bundle dump --file=~/dotfiles/Brewfile --force' to update.%f"
+  print -P "%F{yellow}⚠️  Your Brewfile is out of sync with installed packages.%f"
+  print -P "%F{cyan}💡 Use 'brewupdate' to update your Brewfile, run 'brew outdated' to see what is outdated.%f"
 fi
 
 # load homebrew environment

@@ -4,8 +4,8 @@
 alias dotpush='cd ~/dotfiles && git add . && git commit -m "updated dotfiles using quick dotpush cmd" && git push && cd -'
 
 # quick alias to update Brewfile with current Homebrew/cask/extensions
-# Usage: Run 'brewupdate' to overwrite Brewfile with your current setup
-alias brewupdate='brew bundle dump --file=~/dotfiles/Brewfile --force'
+# Usage: Run 'brewupdate' to update and overwrite Brewfile with your current setup
+alias brewupdate='brew update && brew upgrade && brew bundle dump --file=~/dotfiles/Brewfile --force'
 
 ## aliases
 alias ip='ipconfig getifaddr en0' # get local IP address
