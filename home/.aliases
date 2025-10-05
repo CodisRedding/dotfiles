@@ -78,6 +78,7 @@ alias last='git log -1 HEAD' # show last commit
 alias amend='git commit --amend --no-edit' # quickly amend last commit without changing the message
 alias lg='lazygit' # launch lazygit
 alias gph='git push origin HEAD' # push current branch to origin (same as git push origin <current-branch>)
+alias gmm='git merge master' # merge master into current branch
 
 # termninal recording
 alias record='asciinema rec -c "zsh" ~/code/asciinema/$(date +%Y-%m-%d_%H-%M-%S).cast' # record terminal session to a file in ~/code/asciinema
