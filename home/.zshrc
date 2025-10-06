@@ -4,6 +4,7 @@
 
 # load homebrew environment
 eval "$(/opt/homebrew/bin/brew shellenv)"
+export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
 
 # Load custom aliases early so we can use functions in startup checks
 [ -f "$HOME/dotfiles/home/.aliases" ] && source "$HOME/dotfiles/home/.aliases"
@@ -107,4 +108,4 @@ bindkey '«' zsh_gh_copilot_suggest  # bind Option+\ to suggest
 # Note: This line is only necessary if you are using the VS Code terminal.
 [[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh)"
 # Added by GitLab Knowledge Graph installer
-export PATH="$HOME/.local/bin:$PATH"
+## PATH is now set at the top to prioritize Homebrew and local bin
