@@ -1,33 +1,27 @@
+
 # Uncomment to disable dotfiles git status warning
 # export DOTFILES_NO_GIT_WARN=1
-
-
-# warn if there are uncommitted changes in dotfiles repo (unless disabled)
-if [[ -d "$HOME/dotfiles/.git" && -z "$DOTFILES_NO_GIT_WARN" ]]; then
-  if git -C "$HOME/dotfiles" status --porcelain | grep -q .; then
-    print -P "%F{yellow}⚠️  Uncommitted changes in ~/dotfiles.%f"
-    print -P "%F{cyan}💡 Use 'dotpush' to quickly commit and push your dotfiles.%f"
-  fi
-fi
-
-# warn if Brewfile is out of sync with installed packages
-if ! brew bundle check --file="$HOME/dotfiles/Brewfile" &>/dev/null; then
-  print -P "%F{yellow}⚠️  Your Brewfile is out of sync with installed packages.%f"
-  print -P "%F{cyan}💡 Use 'brewupdate' to update your Brewfile, run 'brew outdated' to see what is outdated.%f"
-fi
 
 # load homebrew environment
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
+# Load custom aliases early so we can use functions in startup checks
+[ -f "$HOME/dotfiles/home/.aliases" ] && source "$HOME/dotfiles/home/.aliases"
+
+# warn if there are uncommitted changes in dotfiles repo or Brewfile issues (unless disabled)
+if [[ -z "$DOTFILES_NO_GIT_WARN" ]]; then
+  (cd "$HOME/dotfiles" && {
+    if _check_dotfiles_status false true true; then
+      export _DOTFILES_RELOAD_WARN="$$"
+    fi
+  })
+fi
+
 # prompt performance
 zstyle ':completion:*' rehash true
 
-
 # path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
-
-# Load custom aliases
-[ -f "$HOME/dotfiles/home/.aliases" ] && source "$HOME/dotfiles/home/.aliases"
 
 # enable advanced tab-completion in your Zsh
 autoload -Uz compinit

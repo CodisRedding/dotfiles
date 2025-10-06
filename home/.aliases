@@ -1,7 +1,199 @@
+# Quick navigation aliases for dotfiles
+alias df='cd ~/dotfiles'
+alias dotfiles='cd ~/dotfiles'
+
+# Function to check dotfiles status (git and Brewfile)
+_check_dotfiles_status() {
+  local show_success="${1:-false}"
+  local in_dotfiles_dir="${2:-false}"
+  local check_session_warn="${3:-false}"
+  
+  if [ "$in_dotfiles_dir" = "false" ]; then
+    cd ~/dotfiles
+  fi
+  
+  local issues_found=false
+  
+  if [[ -d ".git" ]]; then
+    changes=$(git status --porcelain | wc -l)
+    changes="${changes##*( )}"
+    changes="${changes%%*( )}"
+    if [ "$changes" -gt 0 ]; then
+      # Only show if not checking session warning, or if we haven't warned in this session
+      if [ "$check_session_warn" = "false" ] || [[ "$_DOTFILES_RELOAD_WARN" != "$$" ]]; then
+        print -P "%F{yellow} $changes uncommitted change(s) in ~/dotfiles. Use 'dotpush'.%f"
+        issues_found=true
+      fi
+    fi
+  fi
+  
+  if ! brew bundle check --file="$HOME/dotfiles/Brewfile" &>/dev/null; then
+    print -P "%F{yellow} Your Brewfile is out of sync with installed packages.%f"
+    print -P "%F{cyan} Use 'brewupdate' to update your Brewfile, run 'brew outdated' to see what is outdated.%f"
+    issues_found=true
+  fi
+  
+  if [ "$show_success" = "true" ] && [ "$issues_found" = "false" ]; then
+    print -P "%F{green} ✓ Dotfiles are up to date - no uncommitted changes and Brewfile is in sync.%f"
+  fi
+  
+  if [ "$in_dotfiles_dir" = "false" ]; then
+    cd - > /dev/null
+  fi
+  
+  return $([ "$issues_found" = "true" ] && echo 1 || echo 0)
+}
+
+# Check dotfiles status - shows git and Brewfile warnings if needed
+alias df-check='_check_dotfiles_status true false'
+
+# Show what changes would be committed in dotfiles using smart commit message
+alias df-diff='cd ~/dotfiles && echo "=== Git Status ===" && git status --short && echo && echo "=== Proposed Commit Message ===" && _preview_commit_message && cd -'
 # Custom Aliases for Zsh
 
+# Function to generate commit message using GitHub Copilot with fallback
+_get_commit_message() {
+    # Always use full diff against HEAD for maximum portability and accuracy
+    local git_diff_cmd="git diff HEAD"
+    local fallback_prefix="$2"
+    local fallback_files="$3"
+
+    if ! command -v gh >/dev/null 2>&1; then
+        echo "${fallback_prefix}${fallback_files}"
+        return 0
+    fi
+
+    local copilot_output=$(gh copilot suggest -t shell "Write a detailed, multi-line commit message for these changes: $(eval $git_diff_cmd)" 2>&1)
+
+    if echo "$copilot_output" | grep -q "not authorized\|Error:"; then
+        echo "auth_error:${fallback_prefix}${fallback_files}"
+        return 1
+    else
+        local commit_msg=$(echo "$copilot_output" | grep -E "^\s*git commit" | sed "s/.*-m \"\(.*\)\".*/\1/" | head -1)
+        if [ -n "$commit_msg" ]; then
+            echo "$commit_msg"
+        else
+            echo "${fallback_prefix}${fallback_files}"
+        fi
+        return 0
+    fi
+}
+
+# Function to handle authentication prompt for dotpush
+_handle_auth_prompt() {
+    echo "GitHub Copilot CLI not authorized."
+    echo "1) Run \"gh auth login\" to authenticate"
+    echo "2) Use fallback message"
+    read "choice?Choose option (1 or 2): "
+    if [ "$choice" = "1" ]; then
+        gh auth login && echo "Please run the command again after authentication."
+        return 1
+    else
+        return 0
+    fi
+}
+
+# Function to handle interactive commit flow
+# Usage: _interactive_commit [commit_msg] [fallback_msg]
+_interactive_commit() {
+    local commit_msg="$1"
+    local fallback_msg="$2"
+    
+    if echo "$commit_msg" | grep -q "^auth_error:"; then
+        # Not authorized case
+        echo "GitHub Copilot CLI not authorized."
+        echo "Fallback message would be: $(echo "$commit_msg" | sed "s/^auth_error://")"
+        echo "1) Run \"gh auth login\" to authenticate"
+        echo "2) Use fallback message and commit"
+        echo "3) Enter custom message and commit"
+        echo "4) Just preview, don't commit"
+        read "choice?Choose option (1-4): "
+        case "$choice" in
+            1) gh auth login && echo "Please run the command again after authentication." && return 1 ;;
+            2) 
+                final_msg=$(echo "$commit_msg" | sed "s/^auth_error://")
+                echo "Using fallback message: $final_msg"
+                git add . && git commit -m "$final_msg"
+                ;;
+            3)
+                read "custom_msg?Enter custom commit message: "
+                echo "Using custom message: $custom_msg"
+                git add . && git commit -m "$custom_msg"
+                ;;
+            4) echo "Preview only - no commit made." && return 0 ;;
+            *) echo "Invalid choice. Preview only - no commit made." && return 0 ;;
+        esac
+    else
+        # Authorized or fallback case
+        echo "Proposed commit message: $commit_msg"
+        echo "1) Use this message and commit"
+        echo "2) Enter custom message and commit"
+        echo "3) Just preview, don't commit"
+        read "choice?Choose option (1-3): "
+        case "$choice" in
+            1)
+                echo "Using proposed message: $commit_msg"
+                git add . && git commit -m "$commit_msg"
+                ;;
+            2)
+                read "custom_msg?Enter custom commit message: "
+                echo "Using custom message: $custom_msg"
+                git add . && git commit -m "$custom_msg"
+                ;;
+            3) echo "Preview only - no commit made." && return 0 ;;
+            *) echo "Invalid choice. Preview only - no commit made." && return 0 ;;
+        esac
+    fi
+}
+
+# High-level function to commit with smart message generation
+# Usage: _smart_commit [custom_message] [fallback_prefix] [fallback_files_cmd]
+_smart_commit() {
+    local custom_msg="$1"
+    local fallback_prefix="${2:-"chore: updated "}"
+    local fallback_files_cmd="${3:-"git diff --cached --name-only | paste -sd \",\" - | head -5"}"
+    
+    # If custom message provided, use it
+    if [ -n "$custom_msg" ]; then
+        git commit -m "$custom_msg"
+        return $?
+    fi
+    
+    # Otherwise, use smart generation (only evaluate fallback files when needed)
+    local commit_msg=$(_get_commit_message "git diff --cached --stat" "$fallback_prefix" "$(eval $fallback_files_cmd)")
+    
+    if echo "$commit_msg" | grep -q "^auth_error:"; then
+        if _handle_auth_prompt; then
+            commit_msg=$(echo "$commit_msg" | sed "s/^auth_error://")
+        else
+            return 1
+        fi
+    fi
+    
+    git commit -m "$commit_msg"
+    return $?
+}
+
+# Function to preview commit message with interactive options
+# Usage: _preview_commit_message [fallback_prefix] [fallback_files_cmd]
+_preview_commit_message() {
+    local fallback_prefix="${1:-"chore: updated "}"
+    local fallback_files_cmd="${2:-"git diff --name-only | paste -sd \",\" - | head -5"}"
+    
+    if ! command -v gh >/dev/null 2>&1; then
+        echo "GitHub CLI not installed. Fallback message: ${fallback_prefix}$(eval $fallback_files_cmd)"
+        return 0
+    fi
+    
+    local commit_msg=$(_get_commit_message "git diff --stat" "$fallback_prefix" "$(eval $fallback_files_cmd)")
+    _interactive_commit "$commit_msg"
+}
+
 # quick alias to add, commit, and push all changes in dotfiles
-alias dotpush='cd ~/dotfiles && git add . && git commit -m "updated dotfiles using quick dotpush cmd" && git push && cd -'
+alias dotpush='cd ~/dotfiles && git add . && _smart_commit && git push && cd -'
+
+# preview the commit message that dotpush would use without committing
+alias dotpush-dryrun='cd ~/dotfiles && _preview_commit_message && cd -'
 
 # quick alias to update Brewfile with current Homebrew/cask/extensions
 # Usage: Run 'brewupdate' to update and overwrite Brewfile with your current setup
@@ -9,6 +201,116 @@ alias brewupdate='brew update && brew upgrade && brew bundle dump --file=~/dotfi
 
 ## aliases
 alias ip='ipconfig getifaddr en0' # get local IP address
+
+## 1Password ssh-agent aliases
+# list ssh keys added to the 1Password ssh-agent
+alias 1pass-ssh-list='SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock ssh-add -l'
+# open the 1Password ssh-agent config file
+alias 1pass-ssh-config='open ~/.config/1Password/ssh/agent.toml'
+
+# GPG key management
+alias gpg-list='gpg --list-secret-keys --keyid-format LONG'
+alias gpg-list-all='gpg --list-keys --keyid-format LONG'
+alias gpg-github='_gpg_github_format'
+alias gpg-gitlab='_gpg_gitlab_format'
+alias gpg-find='_gpg_find'
+alias gpg-export='_gpg_export'
+alias gpg-fingerprint='gpg --fingerprint'
+
+# GPG helper functions
+_gpg_github_format() {
+    gpg --list-secret-keys --keyid-format LONG | awk '
+    /^sec/ {
+        # Extract key ID from sec line
+        split($2, parts, "/")
+        keyid = parts[2]
+        stored_keyid = keyid
+    }
+    /^uid/ {
+        # Extract email from uid line and print first with light blue color
+        match($0, /<[^>]+>/)
+        if (RSTART) {
+            email = substr($0, RSTART+1, RLENGTH-2)
+            printf "Email address: \033[94m%s\033[0m\n", email
+            print "Key ID: " stored_keyid
+        }
+    }
+    /^ssb/ {
+        # Extract subkey ID from ssb line
+        split($2, parts, "/")
+        subkeyid = parts[2]
+        print "Subkeys: " subkeyid
+        print ""  # Empty line between keys
+    }'
+}
+
+_gpg_gitlab_format() {
+    gpg --list-secret-keys --with-subkey-fingerprints --keyid-format LONG | awk '
+    BEGIN { 
+        main_fingerprint = ""
+        email = ""
+        subkey_fingerprints = ""
+        processing_main = 0
+    }
+    /^sec/ {
+        processing_main = 1
+    }
+    /^uid/ {
+        # Extract email from uid line
+        match($0, /<[^>]+>/)
+        if (RSTART) {
+            email = substr($0, RSTART+1, RLENGTH-2)
+        }
+        processing_main = 0
+    }
+    /^ssb/ {
+        processing_main = 0
+    }
+    /^      [A-F0-9]{40}$/ {
+        # This is a fingerprint line (40 hex characters)
+        if (processing_main) {
+            main_fingerprint = $1
+            processing_main = 0
+        } else {
+            # This is a subkey fingerprint
+            if (subkey_fingerprints == "") {
+                subkey_fingerprints = $1
+            } else {
+                subkey_fingerprints = subkey_fingerprints "\n" $1
+            }
+        }
+    }
+    END {
+        if (email != "" && main_fingerprint != "") {
+            printf "Email address: \033[94m%s\033[0m\n", email
+            print "Key ID: " main_fingerprint
+            if (subkey_fingerprints != "") {
+                print "Subkeys: " subkey_fingerprints
+            }
+            print ""
+        }
+    }'
+}
+
+_gpg_find() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: gpg-find <email|keyid|name>"
+        return 1
+    fi
+    echo "Searching for: $1"
+    gpg --list-secret-keys --keyid-format LONG | grep -i -A 3 -B 1 "$1"
+}
+
+_gpg_export() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: gpg-export <keyid>"
+        echo "This will export the public key for adding to GitHub/services"
+        return 1
+    fi
+    echo "Public key for $1:"
+    echo "=========================="
+    gpg --armor --export "$1"
+}
 
 ## copilot aliases
 # alias to show directory info, git status, and git directories
@@ -78,6 +380,7 @@ alias last='git log -1 HEAD' # show last commit
 alias amend='git commit --amend --no-edit' # quickly amend last commit without changing the message
 alias lg='lazygit' # launch lazygit
 alias gph='git push origin HEAD' # push current branch to origin (same as git push origin <current-branch>)
+alias gmm='git merge master' # merge master into current branch
 
 # termninal recording
 alias record='asciinema rec -c "zsh" ~/code/asciinema/$(date +%Y-%m-%d_%H-%M-%S).cast' # record terminal session to a file in ~/code/asciinema

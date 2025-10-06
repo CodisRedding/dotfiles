@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
+
+# Color variables for readability
+RED="\033[91m"
+GREEN="\033[92m"
+RESET="\033[0m"
 
 # This script checks git-tracked files in the repo and determines whether
 # corresponding files in $HOME are symlinked to the repo files.
@@ -48,6 +54,8 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+
+# List tracked files
 files=$(git ls-files)
 
 # ignore some repo files that are not dotfiles
@@ -87,25 +95,29 @@ for f in $files; do
   # If the repo has a top-level "home/" directory, treat files under it as
   # mapped directly into $HOME (strip the leading "home/")
   relpath="$f"
-  if [[ "$f" == home/* ]]; then
-    relpath="${f#home/}"
-  fi
-
   candidates=()
-  base="$(basename "$relpath")"
-  dir="$(dirname "$relpath")"
-
-  if [[ "$base" == .* ]]; then
-    # repo file already has leading dot, preserve path under $HOME
-    candidates+=("$HOME/$relpath")
+  if [[ "$f" == home/*/* ]]; then
+    # Map files in any home/<dir>/* to ~/<dir>/*
+    relpath="${f#home/}"
+    dir="$(dirname "$relpath")"
+    base="$(basename "$relpath")"
+    candidates+=("$HOME/$dir/$base")
   else
-    if [[ "$dir" == "." || "$dir" == "" ]]; then
-      candidates+=("$HOME/.$base")
-      candidates+=("$HOME/.config/$base")
+    if [[ "$f" == home/* ]]; then
+      relpath="${f#home/}"
+    fi
+    base="$(basename "$relpath")"
+    dir="$(dirname "$relpath")"
+    if [[ "$base" == .* ]]; then
+      candidates+=("$HOME/$relpath")
     else
-      # preserve directory structure under .config, and also try a dot-prefixed dir
-      candidates+=("$HOME/.$dir/$base")
-      candidates+=("$HOME/.config/$dir/$base")
+      if [[ "$dir" == "." || "$dir" == "" ]]; then
+        candidates+=("$HOME/.$base")
+        candidates+=("$HOME/.config/$base")
+      else
+        candidates+=("$HOME/.$dir/$base")
+        candidates+=("$HOME/.config/$dir/$base")
+      fi
     fi
   fi
 
@@ -157,11 +169,12 @@ for f in $files; do
 
   if [ -L "$primary" ]; then
     # link exists but points elsewhere
-    actions+=("replace symlink $primary -> $repo_file")
+    actions+=("replace symlink ${GREEN}$repo_file${RESET} -> ${RED}$primary${RESET}")
   elif [ -e "$primary" ]; then
-    actions+=("backup and symlink $primary -> $repo_file")
+    actions+=("backup and symlink ${GREEN}$repo_file${RESET} -> ${RED}$primary${RESET}")
   else
-    actions+=("create symlink $primary -> $repo_file")
+    # Show repo_file in green and primary in red
+    actions+=("create symlink ${GREEN}$repo_file${RESET} -> ${RED}$primary${RESET}")
   fi
 
   if $APPLY; then
@@ -206,12 +219,51 @@ done
 echo "Checked $(echo "$files" | wc -w) tracked files."
 echo
 
+# Print linked files
 if [ ${#ok[@]} -ne 0 ]; then
-  echo "Linked files:" 
-  for x in "${ok[@]}"; do echo "  $x"; done
+  echo "Linked files:"
+  for x in "${ok[@]}"; do
+    # Determine the actual symlink target for each linked file
+    relpath="$x"
+    if [[ "$x" == home/*/* ]]; then
+      relpath="${x#home/}"
+      dir="$(dirname "$relpath")"
+      base="$(basename "$relpath")"
+      link_path="$HOME/$dir/$base"
+    else
+      if [[ "$x" == home/* ]]; then
+        relpath="${x#home/}"
+      fi
+      base="$(basename "$relpath")"
+      dir="$(dirname "$relpath")"
+      if [[ "$base" == .* ]]; then
+        link_path="$HOME/$relpath"
+      else
+        if [[ "$dir" == "." || "$dir" == "" ]]; then
+          link_path="$HOME/.$base"
+        else
+          link_path="$HOME/.$dir/$base"
+        fi
+      fi
+    fi
+    # Show the link and its target
+    target_path=$(readlink "$link_path")
+    # Replace $HOME with ~ for display
+    short_link_path="${link_path/#$HOME/~}"
+    short_target_path="${target_path/#$HOME/~}"
+    # Show <repo file> -> <home file> (source -> target)
+    short_repo_path="${repo_root}/${x}"
+    short_repo_path="${short_repo_path/#$HOME/~}" # unlikely, but for consistency
+    if [ -n "$target_path" ]; then
+      echo -e "  ${GREEN}$short_repo_path${RESET} -> ${GREEN}$short_link_path${RESET}"
+    else
+      echo -e "  ${GREEN}$short_repo_path${RESET}"
+    fi
+  done
   echo
 fi
 
+# Print not symlinked files
 if [ ${#not_symlink[@]} -ne 0 ]; then
   echo "Files present in $HOME but not symlinked to the repo (candidates exist but not symlink to repo):"
   for x in "${not_symlink[@]}"; do
@@ -220,22 +272,37 @@ if [ ${#not_symlink[@]} -ne 0 ]; then
   echo
 fi
 
+# Print missing files in light red
 if [ ${#missing[@]} -ne 0 ]; then
   echo "Files with no candidate in $HOME (likely not linked or installed):"
-  for x in "${missing[@]}"; do echo "  $x"; done
+  # Print missing files in light red
+  for x in "${missing[@]}"; do echo -e "  ${RED}$x${RESET}"; done
   echo
 fi
 
+# Show planned actions
 if [ ${#actions[@]} -ne 0 ]; then
   echo "Planned actions (primary candidate shown):"
-  for a in "${actions[@]}"; do echo "  $a"; done
+ for a in "${actions[@]}"; do echo -e "  $a"; done
   echo
 fi
 
+# Show untracked files in home/ again for visibility
+untracked=$(git ls-files --others --exclude-standard home)
+if [ -n "$untracked" ]; then
+  echo "Untracked files in home/ (not included in symlink checks):"
+  while IFS= read -r f; do
+    echo -e "  ${RED}$f${RESET} (untracked - run 'git add $f' to include)"
+  done <<< "$untracked"
+  echo
+fi
+
+# Print backup directory message
 if $APPLY && [ -d "$backup_root" ]; then
   echo "Backups (if any) placed under: $backup_root"
 fi
 
+# Final status
 if [ ${#not_symlink[@]} -eq 0 ] && [ ${#missing[@]} -eq 0 ]; then
   echo "All checked tracked files have symlinks in $HOME pointing to the repo."
   exit 0
@@ -249,4 +316,3 @@ else
   # exit non-zero when there are problems
   exit 1
 fi
-
