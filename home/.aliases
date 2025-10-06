@@ -158,10 +158,18 @@ _smart_commit() {
         git commit -m "$custom_msg"
         return $?
     fi
-    
-    # Otherwise, use smart generation (only evaluate fallback files when needed)
+
+    # If no staged changes, show Copilot message for unstaged changes and allow user to stage/commit
+    if [ -z "$(git diff --cached --name-only)" ]; then
+        local commit_msg=$(_get_commit_message "git diff --stat" "$fallback_prefix" "$(eval $fallback_files_cmd)")
+        echo "No staged changes detected. Previewing commit message for unstaged changes:"
+        _interactive_commit "$commit_msg"
+        return 0
+    fi
+
+    # Otherwise, use smart generation for staged changes
     local commit_msg=$(_get_commit_message "git diff --cached --stat" "$fallback_prefix" "$(eval $fallback_files_cmd)")
-    
+
     if echo "$commit_msg" | grep -q "^auth_error:"; then
         if _handle_auth_prompt; then
             commit_msg=$(echo "$commit_msg" | sed "s/^auth_error://")
@@ -169,7 +177,7 @@ _smart_commit() {
             return 1
         fi
     fi
-    
+
     git commit -m "$commit_msg"
     return $?
 }
@@ -187,11 +195,12 @@ _preview_commit_message() {
     fi
     
     local commit_msg=$(_get_commit_message "git diff --stat" "$fallback_prefix" "$(eval $fallback_files_cmd)")
-        echo "[DEBUG] commit_msg: $commit_msg"
-        if [ -z "$commit_msg" ]; then
-            echo "[DEBUG] commit_msg is empty, using fallback."
-            commit_msg="${fallback_prefix}$(eval $fallback_files_cmd)"
-        fi
+    echo "[DEBUG] commit_msg: $commit_msg"
+    if [ -z "$commit_msg" ]; then
+        echo "[DEBUG] commit_msg is empty, using fallback."
+        commit_msg="${fallback_prefix}$(eval $fallback_files_cmd)"
+    fi
+    echo "Previewing commit message for unstaged changes:"
     _interactive_commit "$commit_msg"
 }
 
