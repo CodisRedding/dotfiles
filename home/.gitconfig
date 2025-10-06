@@ -5,6 +5,8 @@
 [pull]
     rebase = false
 [init]
-    defaultBranch = master
+	defaultBranch = master
 [commit]
     gpgsign = true
+[credentials]
+	helper = osxkeychain
