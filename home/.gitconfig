@@ -21,19 +21,22 @@
 			return 1; \
 		fi; \
 		echo 'Generating commit message based on git diff HEAD...'; \
-		DIFF_STAT=$(git diff HEAD --stat); \
-		TEMP_FILE=$(mktemp); \
-		echo | gh copilot suggest -t shell \"Write a concise git commit message for these changes: $DIFF_STAT\" > \"$TEMP_FILE\" 2>&1; \
-		COMMIT_MSG=$(grep -o 'git commit -m \"[^\"]*\"' \"$TEMP_FILE\" | head -1 | sed 's/git commit -m \"\\(.*\\)\"/\\1/'); \
-		if [ -z \"$COMMIT_MSG\" ]; then \
-			COMMIT_MSG=$(grep -o \"git commit -m '[^']*'\" \"$TEMP_FILE\" | head -1 | sed \"s/git commit -m '\\(.*\\)'/\\1/\"); \
+		DIFF_OUTPUT=$(git diff HEAD | head -200); \
+		UNTRACKED=$(git ls-files --others --exclude-standard | paste -sd ',' -); \
+		if [ -n \"$UNTRACKED\" ]; then \
+			DIFF_OUTPUT=\"diff --git New untracked files to be added: $UNTRACKED\"$'\\n'\"$DIFF_OUTPUT\"; \
 		fi; \
+		TEMP_FILE=$(mktemp); \
+		printf '\\n' | gh copilot suggest -t shell \"Write a detailed, multi-line commit message for these changes: $DIFF_OUTPUT\" > \"$TEMP_FILE\" 2>&1; \
+		COMMIT_MSG=$(sed -n '/git commit -m \"/,/\"/p' \"$TEMP_FILE\" | sed '1s/.*git commit -m \"//; $s/\".*//; s/^[[:space:]]*//'); \
 		rm -f \"$TEMP_FILE\"; \
 		if [ -z \"$COMMIT_MSG\" ]; then \
 			echo 'Failed to generate commit message. Using fallback.'; \
-			COMMIT_MSG=\"chore: update $(git diff HEAD --name-only | head -1 | xargs basename)\"; \
+			FIRST_FILE=$(git status --short | head -1 | awk '{print $2}' | xargs basename); \
+			COMMIT_MSG=\"chore: update $FIRST_FILE\"; \
 		fi; \
-		echo \"Suggested commit message: $COMMIT_MSG\"; \
+		echo \"Suggested commit message:\"; \
+		echo \"$COMMIT_MSG\"; \
 		if [ \"$1\" = \"--commit\" ] || [ \"$1\" = \"-c\" ]; then \
 			if [ \"$2\" = \"--all\" ] || [ \"$2\" = \"-a\" ]; then \
 				git add . && git commit -m \"$COMMIT_MSG\"; \
