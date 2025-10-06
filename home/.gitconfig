@@ -16,15 +16,47 @@
 			echo 'Error: GitHub CLI (gh) is not installed. Install with: brew install gh'; \
 			return 1; \
 		fi; \
-		if [ -z \"$(git diff HEAD)\" ] && [ -z \"$(git ls-files --others --exclude-standard)\" ]; then \
-			echo 'No changes detected in git diff HEAD'; \
-			return 1; \
+		TRACKED_ONLY=true; \
+		COMMIT=false; \
+		ADD_ALL=false; \
+		while [ $# -gt 0 ]; do \
+			case $1 in \
+				--include-untracked|-u) \
+					TRACKED_ONLY=false; \
+					shift; \
+					;; \
+				--commit|-c) \
+					COMMIT=true; \
+					shift; \
+					;; \
+				--all|-a) \
+					ADD_ALL=true; \
+					shift; \
+					;; \
+				*) \
+					echo \"Unknown option: $1\"; \
+					return 1; \
+					;; \
+			esac; \
+		done; \
+		if [ \"$TRACKED_ONLY\" = true ]; then \
+			if [ -z \"$(git diff HEAD)\" ]; then \
+				echo 'No tracked changes detected'; \
+				return 1; \
+			fi; \
+		else \
+			if [ -z \"$(git diff HEAD)\" ] && [ -z \"$(git ls-files --others --exclude-standard)\" ]; then \
+				echo 'No changes detected'; \
+				return 1; \
+			fi; \
 		fi; \
-		echo 'Generating commit message based on git diff HEAD...'; \
-		DIFF_OUTPUT=$(git diff HEAD | head -200); \
-		UNTRACKED=$(git ls-files --others --exclude-standard | paste -sd ',' -); \
-		if [ -n \"$UNTRACKED\" ]; then \
-			DIFF_OUTPUT=\"diff --git New untracked files to be added: $UNTRACKED\"$'\\n'\"$DIFF_OUTPUT\"; \
+		echo 'Generating commit message based on changes...'; \
+		DIFF_OUTPUT=$(git diff HEAD --unified=0 | head -200); \
+		if [ \"$TRACKED_ONLY\" != true ]; then \
+			UNTRACKED=$(git ls-files --others --exclude-standard | paste -sd ',' -); \
+			if [ -n \"$UNTRACKED\" ]; then \
+				DIFF_OUTPUT=\"diff --git New untracked files to be added: $UNTRACKED\"$'\\n'\"$DIFF_OUTPUT\"; \
+			fi; \
 		fi; \
 		TEMP_FILE=$(mktemp); \
 		printf '\\n' | gh copilot suggest -t shell \"Write a detailed, multi-line commit message for these changes: $DIFF_OUTPUT\" > \"$TEMP_FILE\" 2>&1; \
@@ -41,15 +73,11 @@
 		fi; \
 		echo \"Suggested commit message:\"; \
 		echo \"$COMMIT_MSG\"; \
-		if [ \"$1\" = \"--commit\" ] || [ \"$1\" = \"-c\" ]; then \
-			if [ \"$2\" = \"--all\" ] || [ \"$2\" = \"-a\" ]; then \
+		if [ \"$COMMIT\" = true ]; then \
+			if [ \"$ADD_ALL\" = true ]; then \
 				git add . && git commit -m \"$COMMIT_MSG\"; \
 			else \
 				git commit -m \"$COMMIT_MSG\"; \
-			fi; \
-		elif [ \"$1\" = \"--all\" ] || [ \"$1\" = \"-a\" ]; then \
-			if [ \"$2\" = \"--commit\" ] || [ \"$2\" = \"-c\" ]; then \
-				git add . && git commit -m \"$COMMIT_MSG\"; \
 			fi; \
 		fi; \
 	}; f"
