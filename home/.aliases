@@ -98,7 +98,12 @@ _handle_auth_prompt() {
 _interactive_commit() {
     local commit_msg="$1"
     local fallback_msg="$2"
-    
+
+    # Make choice a local variable and clear any environment value
+    typeset choice=""
+    unset choice
+    choice=""
+
     if echo "$commit_msg" | grep -q "^auth_error:"; then
         # Not authorized case
         echo "GitHub Copilot CLI not authorized."
@@ -107,42 +112,58 @@ _interactive_commit() {
         echo "2) Use fallback message and commit"
         echo "3) Enter custom message and commit"
         echo "4) Just preview, don't commit"
-        read "choice?Choose option (1-4): "
-        case "$choice" in
-            1) gh auth login && echo "Please run the command again after authentication." && return 1 ;;
-            2) 
-                final_msg=$(echo "$commit_msg" | sed "s/^auth_error://")
-                echo "Using fallback message: $final_msg"
-                git add . && git commit -m "$final_msg"
-                ;;
-            3)
-                read "custom_msg?Enter custom commit message: "
-                echo "Using custom message: $custom_msg"
-                git add . && git commit -m "$custom_msg"
-                ;;
-            4) echo "Preview only - no commit made." && return 0 ;;
-            *) echo "Invalid choice. Preview only - no commit made." && return 0 ;;
-        esac
+        while true; do
+            while read -k 1 -s -t 0; do :; done  # Flush all buffered input before prompt
+            echo "[DEBUG] choice before prompt: '$choice'"
+            read "choice?Choose option (1-4): "
+            echo "[DEBUG] choice after prompt: '$choice'"
+            case "$choice" in
+                1) gh auth login && echo "Please run the command again after authentication." && return 1 ;;
+                2) 
+                    final_msg=$(echo "$commit_msg" | sed "s/^auth_error://")
+                    echo "Using fallback message: $final_msg"
+                    git add . && git commit -m "$final_msg"
+                    break
+                    ;;
+                3)
+                    read "custom_msg?Enter custom commit message: "
+                    echo "Using custom message: $custom_msg"
+                    git add . && git commit -m "$custom_msg"
+                    break
+                    ;;
+                4) echo "Preview only - no commit made." && break ;;
+                *) echo "Invalid choice. Please enter 1, 2, 3, or 4." ;;
+            esac
+        done
+        return 0
     else
         # Authorized or fallback case
         echo "Proposed commit message: $commit_msg"
         echo "1) Use this message and commit"
         echo "2) Enter custom message and commit"
         echo "3) Just preview, don't commit"
-        read "choice?Choose option (1-3): "
-        case "$choice" in
-            1)
-                echo "Using proposed message: $commit_msg"
-                git add . && git commit -m "$commit_msg"
-                ;;
-            2)
-                read "custom_msg?Enter custom commit message: "
-                echo "Using custom message: $custom_msg"
-                git add . && git commit -m "$custom_msg"
-                ;;
-            3) echo "Preview only - no commit made." && return 0 ;;
-            *) echo "Invalid choice. Preview only - no commit made." && return 0 ;;
-        esac
+        while true; do
+            while read -k 1 -s -t 0; do :; done  # Flush all buffered input before prompt
+            echo "[DEBUG] choice before prompt: '$choice'"
+            read "choice?Choose option (1-3): "
+            echo "[DEBUG] choice after prompt: '$choice'"
+            case "$choice" in
+                1)
+                    echo "Using proposed message: $commit_msg"
+                    git add . && git commit -m "$commit_msg"
+                    break
+                    ;;
+                2)
+                    read "custom_msg?Enter custom commit message: "
+                    echo "Using custom message: $custom_msg"
+                    git add . && git commit -m "$custom_msg"
+                    break
+                    ;;
+                3) echo "Preview only - no commit made." && break ;;
+                *) echo "Invalid choice. Please enter 1, 2, or 3." ;;
+            esac
+        done
+        return 0
     fi
 }
 
@@ -205,10 +226,10 @@ _preview_commit_message() {
 }
 
 # quick alias to add, commit, and push all changes in dotfiles
-alias dotpush='cd ~/dotfiles && git add . && _smart_commit && git push && cd -'
+alias dotpush='cd ~/dotfiles && git genmsg --commit --all && git push && cd -'
 
 # preview the commit message that dotpush would use without committing
-alias dotpush-dryrun='cd ~/dotfiles && _preview_commit_message && cd -'
+alias dotpush-dryrun='cd ~/dotfiles && git genmsg && cd -'
 
 # quick alias to update Brewfile with current Homebrew/cask/extensions
 # Usage: Run 'brewupdate' to update and overwrite Brewfile with your current setup
@@ -216,8 +237,6 @@ alias brewupdate='brew update && brew upgrade && brew bundle dump --file=~/dotfi
 
 ## aliases
 alias ip='ipconfig getifaddr en0' # get local IP address
-
-    echo "[DEBUG] Entering _interactive_commit with commit_msg: $commit_msg"
 ## 1Password ssh-agent aliases
 # list ssh keys added to the 1Password ssh-agent
 alias 1pass-ssh-list='SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock ssh-add -l'
@@ -228,7 +247,6 @@ alias 1pass-ssh-config='open ~/.config/1Password/ssh/agent.toml'
 alias gpg-list='gpg --list-secret-keys --keyid-format LONG'
 alias gpg-list-all='gpg --list-keys --keyid-format LONG'
 alias gpg-github='_gpg_github_format'
-        echo "[DEBUG] User selected: $choice"
 alias gpg-gitlab='_gpg_gitlab_format'
 alias gpg-find='_gpg_find'
 alias gpg-export='_gpg_export'
@@ -333,7 +351,7 @@ _gpg_export() {
 
 ## copilot aliases
 # alias to show directory info, git status, and git directories
-alias info='echo "Current directory: $(pwd)"; echo; if git rev-parse --is-inside-work-tree &>/dev/null; then echo "This directory is a git repository."; else echo "This directory is NOT a git repository."; fi; echo; echo "Other .git directories under this tree:"; find . -type d -name .git | tee >(echo "Total: $(wc -l | awk \"{print $1}\")")'
+alias info='echo "Current directory: $(pwd)"; echo; if git rev-parse --is-inside-work-tree &>/dev/null; then echo "This directory is a git repository."; else echo "This directory is NOT a git repository."; fi; echo; echo "Other .git directories under this tree:"; find . -type d -name .git | tee >(wc -l | awk '\''{print "Total: " $1}'\'')'
 
 ## ssh aliases
 alias ssh-bitbucket="ssh bitbucket.org"

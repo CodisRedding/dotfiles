@@ -10,3 +10,39 @@
     gpgsign = true
 [credentials]
 	helper = osxkeychain
+[alias]
+	genmsg = "!f() { \
+		if ! command -v gh >/dev/null 2>&1; then \
+			echo 'Error: GitHub CLI (gh) is not installed. Install with: brew install gh'; \
+			return 1; \
+		fi; \
+		if [ -z \"$(git diff HEAD)\" ] && [ -z \"$(git ls-files --others --exclude-standard)\" ]; then \
+			echo 'No changes detected in git diff HEAD'; \
+			return 1; \
+		fi; \
+		echo 'Generating commit message based on git diff HEAD...'; \
+		DIFF_STAT=$(git diff HEAD --stat); \
+		TEMP_FILE=$(mktemp); \
+		echo | gh copilot suggest -t shell \"Write a concise git commit message for these changes: $DIFF_STAT\" > \"$TEMP_FILE\" 2>&1; \
+		COMMIT_MSG=$(grep -o 'git commit -m \"[^\"]*\"' \"$TEMP_FILE\" | head -1 | sed 's/git commit -m \"\\(.*\\)\"/\\1/'); \
+		if [ -z \"$COMMIT_MSG\" ]; then \
+			COMMIT_MSG=$(grep -o \"git commit -m '[^']*'\" \"$TEMP_FILE\" | head -1 | sed \"s/git commit -m '\\(.*\\)'/\\1/\"); \
+		fi; \
+		rm -f \"$TEMP_FILE\"; \
+		if [ -z \"$COMMIT_MSG\" ]; then \
+			echo 'Failed to generate commit message. Using fallback.'; \
+			COMMIT_MSG=\"chore: update $(git diff HEAD --name-only | head -1 | xargs basename)\"; \
+		fi; \
+		echo \"Suggested commit message: $COMMIT_MSG\"; \
+		if [ \"$1\" = \"--commit\" ] || [ \"$1\" = \"-c\" ]; then \
+			if [ \"$2\" = \"--all\" ] || [ \"$2\" = \"-a\" ]; then \
+				git add . && git commit -m \"$COMMIT_MSG\"; \
+			else \
+				git commit -m \"$COMMIT_MSG\"; \
+			fi; \
+		elif [ \"$1\" = \"--all\" ] || [ \"$1\" = \"-a\" ]; then \
+			if [ \"$2\" = \"--commit\" ] || [ \"$2\" = \"-c\" ]; then \
+				git add . && git commit -m \"$COMMIT_MSG\"; \
+			fi; \
+		fi; \
+	}; f"
