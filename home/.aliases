@@ -1,4 +1,4 @@
-# Quick navigation aliases for dotfiles
+# Quick navigation aliases for dotfiles 
 alias df='cd ~/dotfiles'
 alias dotfiles='cd ~/dotfiles'
 
@@ -65,7 +65,7 @@ _get_commit_message() {
 
     local copilot_output=$(gh copilot suggest -t shell "Write a detailed, multi-line commit message for these changes: $(eval $git_diff_cmd)" 2>&1)
 
-    if echo "$copilot_output" | grep -q "not authorized\|Error:"; then
+    if echo "$copilot_output" | grep -qi "not authorized"; then
         echo "auth_error:${fallback_prefix}${fallback_files}"
         return 1
     else
@@ -181,11 +181,17 @@ _preview_commit_message() {
     local fallback_files_cmd="${2:-"git diff --name-only | paste -sd \",\" - | head -5"}"
     
     if ! command -v gh >/dev/null 2>&1; then
-        echo "GitHub CLI not installed. Fallback message: ${fallback_prefix}$(eval $fallback_files_cmd)"
+            echo "[DEBUG] GitHub CLI not installed. Fallback message: ${fallback_prefix}$(eval $fallback_files_cmd)"
+            _interactive_commit "${fallback_prefix}$(eval $fallback_files_cmd)"
         return 0
     fi
     
     local commit_msg=$(_get_commit_message "git diff --stat" "$fallback_prefix" "$(eval $fallback_files_cmd)")
+        echo "[DEBUG] commit_msg: $commit_msg"
+        if [ -z "$commit_msg" ]; then
+            echo "[DEBUG] commit_msg is empty, using fallback."
+            commit_msg="${fallback_prefix}$(eval $fallback_files_cmd)"
+        fi
     _interactive_commit "$commit_msg"
 }
 
@@ -202,6 +208,7 @@ alias brewupdate='brew update && brew upgrade && brew bundle dump --file=~/dotfi
 ## aliases
 alias ip='ipconfig getifaddr en0' # get local IP address
 
+    echo "[DEBUG] Entering _interactive_commit with commit_msg: $commit_msg"
 ## 1Password ssh-agent aliases
 # list ssh keys added to the 1Password ssh-agent
 alias 1pass-ssh-list='SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock ssh-add -l'
@@ -212,6 +219,7 @@ alias 1pass-ssh-config='open ~/.config/1Password/ssh/agent.toml'
 alias gpg-list='gpg --list-secret-keys --keyid-format LONG'
 alias gpg-list-all='gpg --list-keys --keyid-format LONG'
 alias gpg-github='_gpg_github_format'
+        echo "[DEBUG] User selected: $choice"
 alias gpg-gitlab='_gpg_gitlab_format'
 alias gpg-find='_gpg_find'
 alias gpg-export='_gpg_export'
@@ -229,11 +237,13 @@ _gpg_github_format() {
     /^uid/ {
         # Extract email from uid line and print first with light blue color
         match($0, /<[^>]+>/)
+        echo "[DEBUG] Presenting options for commit_msg: $commit_msg"
         if (RSTART) {
             email = substr($0, RSTART+1, RLENGTH-2)
             printf "Email address: \033[94m%s\033[0m\n", email
             print "Key ID: " stored_keyid
         }
+        echo "[DEBUG] User selected: $choice"
     }
     /^ssb/ {
         # Extract subkey ID from ssb line
