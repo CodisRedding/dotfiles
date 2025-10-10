@@ -6,6 +6,9 @@
 eval "$(/opt/homebrew/bin/brew shellenv)"
 export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
 
+# Source .zprofile to get environment variables in interactive shells (like VS Code terminals)
+[ -f "$HOME/.zprofile" ] && source "$HOME/.zprofile"
+
 # Load custom aliases early so we can use functions in startup checks
 [ -f "$HOME/dotfiles/home/.aliases" ] && source "$HOME/dotfiles/home/.aliases"
 

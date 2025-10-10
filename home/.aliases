@@ -69,10 +69,25 @@ klogs_container_info() {
         ' 2>/dev/null
         ;;
       3)
-        echo -e "\n${CYAN}Events: [placeholder]${RESET}"
+        echo -e "\n${CYAN}Events:${RESET}"
+        kubectl describe pod "$pod" -n "$ns" | sed -n '/^Events:/,/^$/p' | tail -n +3 | awk 'NF {print "  " $1 " " $2 " " $4 ": " $5}' | head -10 2>/dev/null || echo "  No events found"
         ;;
       4)
-        echo -e "\n${CYAN}Environment Variables: [placeholder]${RESET}"
+        echo -e "\n${CYAN}Environment Variables:${RESET}"
+        # Get environment variables and decode secret values
+        kubectl get pod "$pod" -n "$ns" -o json | jq -r '.spec.containers[] | select(.name=="'"$selected_container"'") | .env[] | if .value then "\(.name)=\(.value)" else "\(.name)=secret://\(.valueFrom.secretKeyRef.name)/\(.valueFrom.secretKeyRef.key)" end' 2>/dev/null | while IFS='=' read -r var_name var_value; do
+          if [[ "$var_value" == secret://* ]]; then
+            # Extract secret name and key
+            secret_info="${var_value#secret://}"
+            secret_name="${secret_info%/*}"
+            secret_key="${secret_info#*/}"
+            # Fetch the actual secret value
+            secret_value=$(kubectl get secret "$secret_name" -n "$ns" -o jsonpath="{.data.$secret_key}" 2>/dev/null | base64 -d 2>/dev/null || echo "ERROR")
+            echo "  - $var_name: $secret_value (from secret $secret_name)"
+          else
+            echo "  - $var_name: $var_value"
+          fi
+        done || echo "  No environment variables found"
         ;;
       5)
         echo -e "\n${CYAN}All Info: [placeholder]${RESET}"
