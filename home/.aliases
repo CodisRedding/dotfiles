@@ -39,20 +39,13 @@ klogs_container_info() {
 
   # Interactive menu for more details
   while true; do
-    local menu_options=(
-      "View Pod Conditions (placeholder)"
-      "View Volumes (placeholder)"
-      "View Events (placeholder)"
-      "View Environment Variables (placeholder)"
-      "View All Info (placeholder)"
-      "Exit"
-    )
     echo -e "\n${BLUE}More Details (choose one to view, or exit):${RESET}"
-    for i in {1..6}; do
-      local color="${YELLOW}"
-      [ "$i" -eq 6 ] && color="${RED}"
-      echo -e "${color}${i}.${RESET} ${menu_options[$((i-1))]}"
-    done
+    echo -e "${YELLOW}1.${RESET} View Pod Conditions (placeholder)"
+    echo -e "${YELLOW}2.${RESET} View Volumes (placeholder)"
+    echo -e "${YELLOW}3.${RESET} View Events (placeholder)"
+    echo -e "${YELLOW}4.${RESET} View Environment Variables (placeholder)"
+    echo -e "${YELLOW}5.${RESET} View All Info (placeholder)"
+    echo -e "${RED}6.${RESET} Exit"
     if [ -n "${ZSH_VERSION:-}" ]; then
       read "detail_choice?Enter the number of the detail to view (or 6 to exit): "
     else
