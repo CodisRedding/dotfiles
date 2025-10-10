@@ -30,13 +30,7 @@ klogs_container_info() {
   echo -e ""
   echo -e "Ports: ${YELLOW}8080/TCP${RESET}"
   echo -e ""
-  echo -e "Environment Variables:"
-  echo -e "  From ConfigMap: ${CYAN}pma-api-configmap${RESET}"
-  echo -e "  DB_USER: <set from secret 'pma-db' key 'DB_USERNAME'>"
-  echo -e "  DB_PASSWORD: <set from secret 'pma-db' key 'DB_PASSWORD'>"
-  echo -e "  MSL_USER: <set from secret 'pma-msldb' key 'DB_USERNAME'>"
-  echo -e "  MSL_PASSWORD: <set from secret 'pma-msldb' key 'DB_PASSWORD'>"
-  echo -e ""
+  # ...removed Environment Variables section...
   echo -e "Mounts: ${CYAN}/var/run/secrets/kubernetes.io/serviceaccount${RESET} (from kube-api-access-q4p7d, ro)"
   echo -e ""
   echo -e "Pod IP: ${CYAN}172.20.10.217${RESET}"
@@ -45,16 +39,24 @@ klogs_container_info() {
 
   # Interactive menu for more details
   while true; do
+    local menu_options=(
+      "View Pod Conditions (placeholder)"
+      "View Volumes (placeholder)"
+      "View Events (placeholder)"
+      "View Environment Variables (placeholder)"
+      "View All Info (placeholder)"
+      "Exit"
+    )
     echo -e "\n${BLUE}More Details (choose one to view, or exit):${RESET}"
-    echo -e "${YELLOW}1.${RESET} View Pod Conditions (placeholder)"
-    echo -e "${YELLOW}2.${RESET} View Volumes (placeholder)"
-    echo -e "${YELLOW}3.${RESET} View Events (placeholder)"
-    echo -e "${YELLOW}4.${RESET} View All Info (placeholder)"
-    echo -e "${RED}5.${RESET} Exit"
+    for i in {1..6}; do
+      local color="${YELLOW}"
+      [ "$i" -eq 6 ] && color="${RED}"
+      echo -e "${color}${i}.${RESET} ${menu_options[$((i-1))]}"
+    done
     if [ -n "${ZSH_VERSION:-}" ]; then
-      read "detail_choice?Enter the number of the detail to view (or 5 to exit): "
+      read "detail_choice?Enter the number of the detail to view (or 6 to exit): "
     else
-      printf "Enter the number of the detail to view (or 5 to exit): "
+      printf "Enter the number of the detail to view (or 6 to exit): "
       read -r detail_choice
     fi
     case "$detail_choice" in
@@ -68,14 +70,17 @@ klogs_container_info() {
         echo -e "\n${CYAN}Events: [placeholder]${RESET}"
         ;;
       4)
-        echo -e "\n${CYAN}All Info: [placeholder]${RESET}"
+        echo -e "\n${CYAN}Environment Variables: [placeholder]${RESET}"
         ;;
       5)
+        echo -e "\n${CYAN}All Info: [placeholder]${RESET}"
+        ;;
+      6)
         echo -e "${RED}Exiting container info view.${RESET}"
         break
         ;;
       *)
-        echo -e "${RED}Invalid choice. Please enter a number from 1 to 5.${RESET}"
+        echo -e "${RED}Invalid choice. Please enter a number from 1 to 6.${RESET}"
         ;;
     esac
   done
