@@ -58,7 +58,15 @@ klogs_container_info() {
         kubectl get pod "$pod" -n "$ns" -o json | jq -r '.status.conditions[] | "- Type: \(.type)\n  Status: \(.status)\n  Reason: \(.reason // "N/A")\n  Message: \(.message // "N/A")\n"' 2>/dev/null
         ;;
       2)
-        echo -e "\n${CYAN}Volumes: [placeholder]${RESET}"
+        echo -e "\n${CYAN}Volumes:${RESET}"
+        kubectl get pod "$pod" -n "$ns" -o json | jq -r '
+          .spec.volumes[] | 
+          "- Name: \(.name)\n  Type: \(. | del(.name) | keys[0])" + 
+          if (.configMap) then "\n  ConfigMap: \(.configMap.name)" + (if (.configMap.optional) then " (optional)" else "" end) 
+          elif (.secret) then "\n  Secret: \(.secret.secretName)" + (if (.secret.optional) then " (optional)" else "" end)
+          elif (.projected) then "\n  Projected: " + (.projected.sources | map(. | keys[0]) | join(", "))
+          else "" end
+        ' 2>/dev/null
         ;;
       3)
         echo -e "\n${CYAN}Events: [placeholder]${RESET}"
