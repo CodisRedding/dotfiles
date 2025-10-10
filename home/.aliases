@@ -2,6 +2,303 @@
 alias df='cd ~/dotfiles'
 alias dotfiles='cd ~/dotfiles'
 
+# Stream Kubernetes pod logs for an app.
+# Supports flags for clarity when both number-of-lines and search-term are optional.
+# Usage:
+#   klogs [ -n | --no-color ] [ -l N | --lines N ] [ -s TERM | --search TERM ] <app-name>
+# Examples:
+#   klogs sso-proxy                      # stream all logs
+#   klogs -l 200 sso-proxy               # tail last 200 lines then follow
+#   klogs -s error sso-proxy             # stream logs filtered for 'error'
+#   klogs -n -l 100 -s foo sso-proxy     # disable color, tail 100 lines, filter 'foo'
+# Backwards-compatible: simple forms like `klogs app 200` or `klogs app error` still work.
+klogs() {
+  # Defaults
+  local KLOG_NO_COLOR=0
+  local KLOG_LINES=""
+  local KLOG_SEARCH_TERMS=()
+  local KLOG_APP=""
+
+  # Parse all arguments, flags can be anywhere
+  while [ "$#" -gt 0 ]; do
+    echo "[DEBUG] Parsing arg: $1"
+    case "$1" in
+      -n|--no-color)
+        KLOG_NO_COLOR=1
+        shift
+        ;;
+      -l|--lines)
+        shift
+        if [ -n "$1" ] && printf '%s' "$1" | grep -qE '^[0-9]+$'; then
+          KLOG_LINES="$1"
+          shift
+        else
+          echo "Error: --lines requires a numeric argument"
+          return 1
+        fi
+        ;;
+      --lines=*)
+        KLOG_LINES="${1#--lines=}"
+        shift
+        ;;
+      -s|--search)
+        shift
+        if [ -n "$1" ]; then
+          KLOG_SEARCH_TERMS+=("$1")
+          shift
+        else
+          echo "Error: --search requires an argument"
+          return 1
+        fi
+        ;;
+      --search=*)
+        KLOG_SEARCH_TERMS+=("${1#--search=}")
+        shift
+        ;;
+      -h|--help)
+        cat <<EOF
+klogs - Stream Kubernetes pod logs for an app, with interactive pod selection and advanced filtering.
+
+USAGE:
+  klogs [ -n | --no-color ] [ -l N | --lines N ] [ -s TERM | --search TERM ]... <app-name>
+
+FLAGS:
+  -n, --no-color         Disable colored output in pod list and logs
+  -l N, --lines N        Tail last N lines before streaming logs (default: all)
+  -s TERM, --search TERM Filter logs for TERM (case-insensitive, fixed string). Repeat for multiple terms.
+  -h, --help             Show this help guide
+
+ARGUMENTS:
+  <app-name>             Required. Substring to match pod names (e.g., sso-proxy)
+
+EXAMPLES:
+  klogs sso-proxy                      # Stream all logs for pods matching 'sso-proxy'
+  klogs -l 200 sso-proxy               # Tail last 200 lines, then follow logs
+  klogs -s error sso-proxy             # Show only log lines containing 'error'
+  klogs -s error -s warning sso-proxy  # Show log lines containing 'error' OR 'warning'
+  klogs -n -l 100 -s foo sso-proxy     # Disable color, tail 100 lines, filter 'foo'
+  klogs sso-proxy 200                  # (Legacy) Tail 200 lines for 'sso-proxy'
+  klogs sso-proxy error                # (Legacy) Filter logs for 'error'
+
+LOG DATA EXAMPLE:
+  10.115.155.14 - - [10/Oct/2025:17:01:00 +0000] "GET /api/status HTTP/1.1" 200 60 "-" "curl/7.61.1" "-"
+
+SEARCHING FOR LOGS FROM A SPECIFIC HOUR ON A DATE:
+  To show all logs from 17:00 on 10/Oct/2025:
+    klogs sso-proxy -s 10/Oct/2025:17
+  To show logs from multiple hours or dates:
+    klogs sso-proxy -s 10/Oct/2025:17 -s 10/Oct/2025:18
+
+INTERACTIVE POD SELECTION:
+  - Lists all pods matching <app-name> across namespaces
+  - Shows pod info in a table (unless --no-color)
+  - Prompts for pod selection by number
+
+LOG STREAMING:
+  - Streams logs for the selected pod
+  - If --lines is set, tails last N lines before following
+  - If --search is set, filters logs for TERM(s) (case-insensitive)
+  - Color highlighting for TERM(s) if color enabled
+
+TROUBLESHOOTING:
+  - If no pods are found, check your app name or namespace
+  - If you see 'No pods found', verify kubectl context and permissions
+  - For very large logs, use --lines to limit output
+
+TIPS:
+  - Flags can appear before or after <app-name>
+  - Works in both zsh and bash
+  - Backwards-compatible with simple forms: klogs app 200, klogs app error
+  - Use --no-color for piping output to files or other tools
+
+EOF
+        return 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -* )
+        echo "Unknown option: $1"
+        return 1
+        ;;
+      *)
+        if [ -z "$KLOG_APP" ]; then
+          KLOG_APP="$1"
+          shift
+        elif [ -z "$KLOG_LINES" ] && printf '%s' "$1" | grep -qE '^[0-9]+$'; then
+          KLOG_LINES="$1"
+          shift
+        elif [ -z "$KLOG_SEARCH_TERM" ]; then
+          KLOG_SEARCH_TERM="$1"
+          shift
+        else
+          shift
+        fi
+        ;;
+    esac
+  done
+
+  echo "[DEBUG] After flag parsing: KLOG_NO_COLOR=$KLOG_NO_COLOR, KLOG_LINES=$KLOG_LINES, KLOG_SEARCH_TERM=$KLOG_SEARCH_TERM, app=\"$KLOG_APP\""
+  if [ -z "$KLOG_APP" ]; then
+    echo "Usage: klogs [ -n | --no-color ] [ -l N | --lines N ] [ -s TERM | --search TERM ] <app-name>"
+    return 1
+  fi
+
+  # Colors (zsh/bash compatible) - only set when coloring enabled
+  if [ "$KLOG_NO_COLOR" -eq 0 ]; then
+    local RESET=$'\033[0m'
+    local BOLD=$'\033[1m'
+    local CYAN=$'\033[36m'    # namespace
+    local GREEN=$'\033[32m'   # pod name
+    local YELLOW=$'\033[33m'  # ready/status
+    local HEADER_COLOR=$'\033[97m'
+  else
+    local RESET=''
+    local BOLD=''
+    local CYAN=''
+    local GREEN=''
+    local YELLOW=''
+    local HEADER_COLOR=''
+  fi
+
+  # Get pods output, filter by pod name, and keep header; keep alignment with column -t
+  pods_raw=$(kubectl get pods --all-namespaces | grep -E "^NAMESPACE|$KLOG_APP" | column -t 2>/dev/null)
+  if [ -z "$pods_raw" ]; then
+    echo "No pods found matching name: $KLOG_APP."
+    return 1
+  fi
+
+  header=$(echo "$pods_raw" | head -n 1)
+  pods=$(echo "$pods_raw" | tail -n +2)
+
+  pod_lines=()
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && pod_lines+=("$line")
+  done <<< "$pods"
+
+  if [ ${#pod_lines[@]} -eq 0 ]; then
+    echo "No pods found matching name: $KLOG_APP."
+    return 1
+  fi
+
+  # Color header labels (preserve spacing)
+  colored_header=$(printf "%s" "$header" | sed -E \
+    -e "s/\bNAMESPACE\b/${BOLD}${CYAN}&${RESET}/g" \
+    -e "s/\bNAME\b/${BOLD}${GREEN}&${RESET}/g" \
+    -e "s/\bREADY\b/${BOLD}${YELLOW}&${RESET}/g" \
+    -e "s/\bSTATUS\b/${BOLD}${YELLOW}&${RESET}/g")
+
+  printf "\n%-4s %s\n" "Idx" "$colored_header"
+  # Iterate safely over indices
+  i=1
+  for raw_line in "${pod_lines[@]}"; do
+    # Preserve the exact spacing between columns by capturing separators.
+    # Capture: optional leading spaces, col1, separator spaces, col2, rest
+    colored_line=$(printf "%s" "$raw_line" | sed -E \
+      -e "s/^([[:space:]]*)([^[:space:]]+)([[:space:]]+)([^[:space:]]+)(.*)$/\\1${CYAN}\\2${RESET}\\3${GREEN}\\4${RESET}\\5/")
+    printf "[%-2d] %s\n" "$i" "$colored_line"
+    i=$((i+1))
+  done
+
+  # Prompt for selection in a shell-compatible way. Use zsh-style prompt when
+  # running under zsh, otherwise fall back to a POSIX read prompt so this
+  # function works both in zsh and bash.
+  if [ -n "${ZSH_VERSION:-}" ]; then
+    read "idx?Enter the number of the pod: "
+  else
+    printf "Enter the number of the pod: "
+    read -r idx
+  fi
+  if ! [[ "$idx" =~ ^[0-9]+$ ]]; then
+    echo "Please enter a valid number."
+    return 1
+  fi
+  if [ "$idx" -lt 1 ] || [ "$idx" -gt ${#pod_lines[@]} ]; then
+    echo "Please select a valid pod number."
+    return 1
+  fi
+
+  # zsh arrays are 1-based while bash arrays are 0-based. Select the
+  # appropriate element depending on the running shell.
+  if [ -n "${ZSH_VERSION:-}" ]; then
+    selected="${pod_lines[$idx]}"
+  else
+    selected="${pod_lines[$((idx-1))]}"
+  fi
+  ns=$(echo "$selected" | awk '{print $1}')
+  pod=$(echo "$selected" | awk '{print $2}')
+
+  if [ -z "$ns" ] || [ -z "$pod" ]; then
+    echo "Invalid selection."
+    return 1
+  fi
+
+  # Get container names for the selected pod
+  if [ -n "${ZSH_VERSION:-}" ]; then
+    typeset -a container_names
+    container_names=( $(kubectl get pod "$pod" -n "$ns" -o jsonpath='{.spec.containers[*].name}') )
+  else
+    local container_names=( $(kubectl get pod "$pod" -n "$ns" -o jsonpath='{.spec.containers[*].name}') )
+  fi
+  echo "[DEBUG] container_names: ${container_names[@]}"
+  selected_container="${container_names[0]}"
+  if [ ${#container_names[@]} -gt 1 ]; then
+    echo "\nThis pod has multiple containers:"
+    idx=1
+    for name in "${container_names[@]}"; do
+      printf "[%d] %s\n" "$idx" "$name"
+      idx=$((idx+1))
+    done
+    if [ -n "${ZSH_VERSION:-}" ]; then
+      read "cidx?Enter the number of the container to view logs (default 1): "
+    else
+      printf "Enter the number of the container to view logs (default 1): "
+      read -r cidx
+    fi
+    echo "[DEBUG] cidx: $cidx"
+    if [[ "$cidx" =~ ^[0-9]+$ ]] && [ "$cidx" -ge 1 ] && [ "$cidx" -le ${#container_names[@]} ]; then
+      idx=1
+      for name in "${container_names[@]}"; do
+        if [ "$idx" -eq "$cidx" ]; then
+          selected_container="$name"
+          break
+        fi
+        idx=$((idx+1))
+      done
+    fi
+    echo "[DEBUG] selected_container: $selected_container"
+  fi
+
+  # Build kubectl command and optionally filter by search term using grep.
+  if [ -n "$KLOG_LINES" ]; then
+    kub_cmd=(kubectl logs -n "$ns" "$pod" -c "$selected_container" --tail="$KLOG_LINES" -f)
+    echo "Streaming last $KLOG_LINES lines for pod $pod (container $selected_container) in namespace $ns..."
+  else
+    kub_cmd=(kubectl logs -n "$ns" "$pod" -c "$selected_container" -f)
+    echo "Streaming all logs for pod $pod (container $selected_container) in namespace $ns..."
+  fi
+
+  if [ ${#KLOG_SEARCH_TERMS[@]} -gt 0 ]; then
+    # Build grep arguments for all search terms
+    grep_args=(--line-buffered -i -F)
+    if [ "$KLOG_NO_COLOR" -eq 0 ]; then
+      grep_args+=(--color=always)
+    fi
+    for term in "${KLOG_SEARCH_TERMS[@]}"; do
+      grep_args+=(-e "$term")
+    done
+    "${kub_cmd[@]}" | grep "${grep_args[@]}"
+  else
+    "${kub_cmd[@]}"
+  fi
+}
+# Usage examples:
+#   klogs sso-proxy            # stream all logs for app pods
+#   klogs sso-proxy 200        # stream last 200 lines then follow
+#   klogs sso-proxy error      # stream logs and show only lines containing 'error'
+#   klogs -n sso-proxy 200 foo # disable coloring, tail 200 lines, filter 'foo'
+
 # Function to check dotfiles status (git and Brewfile)
 _check_dotfiles_status() {
   local show_success="${1:-false}"
