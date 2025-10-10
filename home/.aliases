@@ -44,12 +44,11 @@ klogs_container_info() {
     echo -e "${YELLOW}2.${RESET} View Volumes (placeholder)"
     echo -e "${YELLOW}3.${RESET} View Events (placeholder)"
     echo -e "${YELLOW}4.${RESET} View Environment Variables (placeholder)"
-    echo -e "${YELLOW}5.${RESET} View All Info (placeholder)"
-    echo -e "${RED}6.${RESET} Exit"
+    echo -e "${RED}5.${RESET} Exit"
     if [ -n "${ZSH_VERSION:-}" ]; then
-      read "detail_choice?Enter the number of the detail to view (or 6 to exit): "
+      read "detail_choice?Enter the number of the detail to view (or 5 to exit): "
     else
-      printf "Enter the number of the detail to view (or 6 to exit): "
+      printf "Enter the number of the detail to view (or 5 to exit): "
       read -r detail_choice
     fi
     case "$detail_choice" in
@@ -90,14 +89,11 @@ klogs_container_info() {
         done || echo "  No environment variables found"
         ;;
       5)
-        echo -e "\n${CYAN}All Info: [placeholder]${RESET}"
-        ;;
-      6)
         echo -e "${RED}Exiting container info view.${RESET}"
         break
         ;;
       *)
-        echo -e "${RED}Invalid choice. Please enter a number from 1 to 6.${RESET}"
+        echo -e "${RED}Invalid choice. Please enter a number from 1 to 5.${RESET}"
         ;;
     esac
   done
@@ -113,6 +109,7 @@ klogs() {
   local KLOG_LINES=""
   local KLOG_SEARCH_TERMS=()
   local KLOG_APP=""
+  local KLOG_NAMESPACE=""
 
   # Parse all arguments, flags can be anywhere
   while [ "$#" -gt 0 ]; do
@@ -120,6 +117,20 @@ klogs() {
     case "$1" in
       -n|--no-color)
         KLOG_NO_COLOR=1
+        shift
+        ;;
+      -N|--namespace)
+        shift
+        if [ -n "$1" ]; then
+          KLOG_NAMESPACE="$1"
+          shift
+        else
+          echo "Error: --namespace requires an argument"
+          return 1
+        fi
+        ;;
+      --namespace=*)
+        KLOG_NAMESPACE="${1#--namespace=}"
         shift
         ;;
       -l|--lines)
@@ -155,19 +166,23 @@ klogs() {
 klogs - Stream Kubernetes pod logs for an app, with interactive pod selection and advanced filtering.
 
 USAGE:
-  klogs [ -n | --no-color ] [ -l N | --lines N ] [ -s TERM | --search TERM ]... <app-name>
+  klogs [ -n | --no-color ] [ -N NS | --namespace NS ] [ -l N | --lines N ] [ -s TERM | --search TERM ]... [<app-name>]
 
 FLAGS:
   -n, --no-color         Disable colored output in pod list and logs
+  -N NS, --namespace NS  Limit search to specified namespace (default: all namespaces)
   -l N, --lines N        Tail last N lines before streaming logs (default: all)
   -s TERM, --search TERM Filter logs for TERM (case-insensitive, fixed string). Repeat for multiple terms.
   -h, --help             Show this help guide
 
 ARGUMENTS:
-  <app-name>             Required. Substring to match pod names (e.g., sso-proxy)
+  <app-name>             Optional. Substring to match pod names (e.g., sso-proxy). If omitted, shows all pods across all namespaces.
 
 EXAMPLES:
+  klogs                                # Show all pods across all namespaces
+  klogs -N dev                         # Show all pods in 'dev' namespace only
   klogs sso-proxy                      # Stream all logs for pods matching 'sso-proxy'
+  klogs -N qa sso-proxy                # Stream logs for 'sso-proxy' pods in 'qa' namespace
   klogs -l 200 sso-proxy               # Tail last 200 lines, then follow logs
   klogs -s error sso-proxy             # Show only log lines containing 'error'
   klogs -s error -s warning sso-proxy  # Show log lines containing 'error' OR 'warning'
@@ -185,7 +200,7 @@ SEARCHING FOR LOGS FROM A SPECIFIC HOUR ON A DATE:
     klogs sso-proxy -s 10/Oct/2025:17 -s 10/Oct/2025:18
 
 INTERACTIVE POD SELECTION:
-  - Lists all pods matching <app-name> across namespaces
+  - Lists all pods matching <app-name> in specified namespace (or all namespaces if none specified), or all pods if no <app-name> provided
   - Shows pod info in a table (unless --no-color)
   - Prompts for pod selection by number
 
@@ -234,10 +249,13 @@ EOF
     esac
   done
 
-  echo "[DEBUG] After flag parsing: KLOG_NO_COLOR=$KLOG_NO_COLOR, KLOG_LINES=$KLOG_LINES, KLOG_SEARCH_TERM=$KLOG_SEARCH_TERM, app=\"$KLOG_APP\""
+  echo "[DEBUG] After flag parsing: KLOG_NO_COLOR=$KLOG_NO_COLOR, KLOG_NAMESPACE=$KLOG_NAMESPACE, KLOG_LINES=$KLOG_LINES, KLOG_SEARCH_TERM=$KLOG_SEARCH_TERM, app=\"$KLOG_APP\""
   if [ -z "$KLOG_APP" ]; then
-    echo "Usage: klogs [ -n | --no-color ] [ -l N | --lines N ] [ -s TERM | --search TERM ] <app-name>"
-    return 1
+    if [ -n "$KLOG_NAMESPACE" ]; then
+      echo "No app name provided - showing all pods in namespace '$KLOG_NAMESPACE'..."
+    else
+      echo "No app name provided - showing all pods across all namespaces..."
+    fi
   fi
 
   # Colors (zsh/bash compatible) - only set when coloring enabled
@@ -257,10 +275,26 @@ EOF
     local HEADER_COLOR=''
   fi
 
-  # Get pods output, filter by pod name, and keep header; keep alignment with column -t
-  pods_raw=$(kubectl get pods --all-namespaces | grep -E "^NAMESPACE|$KLOG_APP" | column -t 2>/dev/null)
+  # Get pods output - filter by pod name if provided, otherwise show all
+  if [ -n "$KLOG_NAMESPACE" ]; then
+    if [ -n "$KLOG_APP" ]; then
+      pods_raw=$(kubectl get pods -n "$KLOG_NAMESPACE" | grep -E "^NAME|$KLOG_APP" | column -t 2>/dev/null)
+    else
+      pods_raw=$(kubectl get pods -n "$KLOG_NAMESPACE" | column -t 2>/dev/null)
+    fi
+  else
+    if [ -n "$KLOG_APP" ]; then
+      pods_raw=$(kubectl get pods --all-namespaces | grep -E "^NAMESPACE|$KLOG_APP" | column -t 2>/dev/null)
+    else
+      pods_raw=$(kubectl get pods --all-namespaces | column -t 2>/dev/null)
+    fi
+  fi
   if [ -z "$pods_raw" ]; then
-    echo "No pods found matching name: $KLOG_APP."
+    if [ -n "$KLOG_NAMESPACE" ]; then
+      echo "No pods found matching name: $KLOG_APP in namespace: $KLOG_NAMESPACE."
+    else
+      echo "No pods found matching name: $KLOG_APP."
+    fi
     return 1
   fi
 
@@ -273,25 +307,46 @@ EOF
   done <<< "$pods"
 
   if [ ${#pod_lines[@]} -eq 0 ]; then
-    echo "No pods found matching name: $KLOG_APP."
+    if [ -n "$KLOG_NAMESPACE" ]; then
+      echo "No pods found matching name: $KLOG_APP in namespace: $KLOG_NAMESPACE."
+    else
+      echo "No pods found matching name: $KLOG_APP."
+    fi
     return 1
   fi
 
   # Color header labels (preserve spacing)
-  colored_header=$(printf "%s" "$header" | sed -E \
-    -e "s/\bNAMESPACE\b/${BOLD}${CYAN}&${RESET}/g" \
-    -e "s/\bNAME\b/${BOLD}${GREEN}&${RESET}/g" \
-    -e "s/\bREADY\b/${BOLD}${YELLOW}&${RESET}/g" \
-    -e "s/\bSTATUS\b/${BOLD}${YELLOW}&${RESET}/g")
+  if [ -n "$KLOG_NAMESPACE" ]; then
+    # When using specific namespace, header is: NAME READY STATUS RESTARTS AGE
+    colored_header=$(printf "%s" "$header" | sed -E \
+      -e "s/\bNAME\b/${BOLD}${GREEN}&${RESET}/g" \
+      -e "s/\bREADY\b/${BOLD}${YELLOW}&${RESET}/g" \
+      -e "s/\bSTATUS\b/${BOLD}${YELLOW}&${RESET}/g")
+  else
+    # When using --all-namespaces, header is: NAMESPACE NAME READY STATUS RESTARTS AGE
+    colored_header=$(printf "%s" "$header" | sed -E \
+      -e "s/\bNAMESPACE\b/${BOLD}${CYAN}&${RESET}/g" \
+      -e "s/\bNAME\b/${BOLD}${GREEN}&${RESET}/g" \
+      -e "s/\bREADY\b/${BOLD}${YELLOW}&${RESET}/g" \
+      -e "s/\bSTATUS\b/${BOLD}${YELLOW}&${RESET}/g")
+  fi
 
   printf "\n%-4s %s\n" "Idx" "$colored_header"
   # Iterate safely over indices
   i=1
   for raw_line in "${pod_lines[@]}"; do
     # Preserve the exact spacing between columns by capturing separators.
-    # Capture: optional leading spaces, col1, separator spaces, col2, rest
-    colored_line=$(printf "%s" "$raw_line" | sed -E \
-      -e "s/^([[:space:]]*)([^[:space:]]+)([[:space:]]+)([^[:space:]]+)(.*)$/\\1${CYAN}\\2${RESET}\\3${GREEN}\\4${RESET}\\5/")
+    if [ -n "$KLOG_NAMESPACE" ]; then
+      # When using specific namespace, format is: NAME READY STATUS RESTARTS AGE
+      # Color NAME and READY columns
+      colored_line=$(printf "%s" "$raw_line" | sed -E \
+        -e "s/^([[:space:]]*)([^[:space:]]+)([[:space:]]+)([^[:space:]]+)(.*)$/\\1${GREEN}\\2${RESET}\\3${YELLOW}\\4${RESET}\\5/")
+    else
+      # When using --all-namespaces, format is: NAMESPACE NAME READY STATUS RESTARTS AGE
+      # Color NAMESPACE and NAME columns
+      colored_line=$(printf "%s" "$raw_line" | sed -E \
+        -e "s/^([[:space:]]*)([^[:space:]]+)([[:space:]]+)([^[:space:]]+)(.*)$/\\1${CYAN}\\2${RESET}\\3${GREEN}\\4${RESET}\\5/")
+    fi
     printf "[%-2d] %s\n" "$i" "$colored_line"
     i=$((i+1))
   done
@@ -321,8 +376,26 @@ EOF
   else
     selected="${pod_lines[$((idx-1))]}"
   fi
-  ns=$(echo "$selected" | awk '{print $1}')
-  pod=$(echo "$selected" | awk '{print $2}')
+  
+  echo "[DEBUG] selected line: '$selected'"
+  
+  # Remove the [number] prefix from the selected line before parsing
+  selected=$(echo "$selected" | sed 's/^\[[0-9]*\] //')
+  
+  echo "[DEBUG] selected line after stripping prefix: '$selected'"
+  
+  # Parse pod name and namespace based on whether we're using all namespaces or a specific one
+  if [ -n "$KLOG_NAMESPACE" ]; then
+    # When using specific namespace, format is: NAME READY STATUS RESTARTS AGE
+    pod=$(echo "$selected" | awk '{print $1}')
+    ns="$KLOG_NAMESPACE"
+  else
+    # When using --all-namespaces, format is: NAMESPACE NAME READY STATUS RESTARTS AGE
+    ns=$(echo "$selected" | awk '{print $1}')
+    pod=$(echo "$selected" | awk '{print $2}')
+  fi
+
+  echo "[DEBUG] parsed: ns='$ns', pod='$pod'"
 
   if [ -z "$ns" ] || [ -z "$pod" ]; then
     echo "Invalid selection."
