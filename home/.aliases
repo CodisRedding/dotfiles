@@ -3,15 +3,6 @@ alias df='cd ~/dotfiles'
 alias dotfiles='cd ~/dotfiles'
 
 # Stream Kubernetes pod logs for an app.
-# Supports flags for clarity when both number-of-lines and search-term are optional.
-# Usage:
-#   klogs [ -n | --no-color ] [ -l N | --lines N ] [ -s TERM | --search TERM ] <app-name>
-# Examples:
-#   klogs sso-proxy                      # stream all logs
-#   klogs -l 200 sso-proxy               # tail last 200 lines then follow
-#   klogs -s error sso-proxy             # stream logs filtered for 'error'
-#   klogs -n -l 100 -s foo sso-proxy     # disable color, tail 100 lines, filter 'foo'
-# Backwards-compatible: simple forms like `klogs app 200` or `klogs app error` still work.
 klogs() {
   # Defaults
   local KLOG_NO_COLOR=0
@@ -250,6 +241,39 @@ EOF
       printf "[%d] %s\n" "$idx" "$name"
       idx=$((idx+1))
     done
+    echo ""
+    echo "Choose an action:"
+    echo "[L] View logs for a container"
+    echo "[I] View info about a container"
+    if [ -n "${ZSH_VERSION:-}" ]; then
+      read "action?Enter L for logs or I for info (default L): "
+    else
+      printf "Enter L for logs or I for info (default L): "
+      read -r action
+    fi
+    action="${action:-L}"
+    if [[ "$action" =~ ^[Ii]$ ]]; then
+      if [ -n "${ZSH_VERSION:-}" ]; then
+        read "cidx?Enter the number of the container to view info (default 1): "
+      else
+        printf "Enter the number of the container to view info (default 1): "
+        read -r cidx
+      fi
+      echo "[DEBUG] cidx: $cidx"
+      if [[ "$cidx" =~ ^[0-9]+$ ]] && [ "$cidx" -ge 1 ] && [ "$cidx" -le ${#container_names[@]} ]; then
+        idx=1
+        for name in "${container_names[@]}"; do
+          if [ "$idx" -eq "$cidx" ]; then
+            selected_container="$name"
+            break
+          fi
+          idx=$((idx+1))
+        done
+      fi
+      echo "[DEBUG] selected_container: $selected_container"
+      echo "Container info for '$selected_container' is not implemented yet."
+      return 0
+    fi
     if [ -n "${ZSH_VERSION:-}" ]; then
       read "cidx?Enter the number of the container to view logs (default 1): "
     else
