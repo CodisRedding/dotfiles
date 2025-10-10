@@ -54,7 +54,8 @@ klogs_container_info() {
     fi
     case "$detail_choice" in
       1)
-        echo -e "\n${CYAN}Pod Conditions: [placeholder]${RESET}"
+        echo -e "\n${CYAN}Pod Conditions:${RESET}"
+        kubectl get pod "$pod" -n "$ns" -o json | jq -r '.status.conditions[] | "- Type: \(.type)\n  Status: \(.status)\n  Reason: \(.reason // "N/A")\n  Message: \(.message // "N/A")\n"' 2>/dev/null
         ;;
       2)
         echo -e "\n${CYAN}Volumes: [placeholder]${RESET}"
