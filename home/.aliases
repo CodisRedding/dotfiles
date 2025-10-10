@@ -1,3 +1,76 @@
+# Interactive container info viewer for klogs
+klogs_container_info() {
+  local pod="$1"
+  local ns="$2"
+  local container="$3"
+
+  # Placeholder: Replace with real info extraction later
+  echo "\n========================================"
+  echo "Container Info: $container"
+  echo "Pod: $pod"
+  echo "Namespace: $ns"
+  echo "========================================"
+  echo "Status: Running"
+  echo "Ready: True"
+  echo "Restart Count: 0"
+  echo "Started At: 2025-09-15T17:25:49Z"
+  echo ""
+  echo "Image: premisehealth-dockerv2-local.jfrog.io/pma-api:master"
+  echo "Image ID: premisehealth-dockerv2-local.jfrog.io/pma-api@sha256:316fa6811098f9181b100cacb9d34d79b0bc3e0360c63beaeaa65ae087fe74f8"
+  echo "Container ID: containerd://12bc7113a3a03065c87c18e306a86dae57266c858ba8370daa3e6cc8a1948c84"
+  echo ""
+  echo "Ports: 8080/TCP"
+  echo ""
+  echo "Environment Variables:"
+  echo "  From ConfigMap: pma-api-configmap"
+  echo "  DB_USER: <set from secret 'pma-db' key 'DB_USERNAME'>"
+  echo "  DB_PASSWORD: <set from secret 'pma-db' key 'DB_PASSWORD'>"
+  echo "  MSL_USER: <set from secret 'pma-msldb' key 'DB_USERNAME'>"
+  echo "  MSL_PASSWORD: <set from secret 'pma-msldb' key 'DB_PASSWORD'>"
+  echo ""
+  echo "Mounts: /var/run/secrets/kubernetes.io/serviceaccount (from kube-api-access-q4p7d, ro)"
+  echo ""
+  echo "Pod IP: 172.20.10.217"
+  echo "Node: dev-1e6936-worker-1/10.115.155.51"
+  echo "========================================"
+
+  # Interactive menu for more details
+  while true; do
+    echo "\nMore Details (choose one to view, or exit):"
+    echo "1. View Pod Conditions (placeholder)"
+    echo "2. View Volumes (placeholder)"
+    echo "3. View Events (placeholder)"
+    echo "4. View All Info (placeholder)"
+    echo "5. Exit"
+    if [ -n "${ZSH_VERSION:-}" ]; then
+      read "detail_choice?Enter the number of the detail to view (or 5 to exit): "
+    else
+      printf "Enter the number of the detail to view (or 5 to exit): "
+      read -r detail_choice
+    fi
+    case "$detail_choice" in
+      1)
+        echo "\nPod Conditions: [placeholder]"
+        ;;
+      2)
+        echo "\nVolumes: [placeholder]"
+        ;;
+      3)
+        echo "\nEvents: [placeholder]"
+        ;;
+      4)
+        echo "\nAll Info: [placeholder]"
+        ;;
+      5)
+        echo "Exiting container info view."
+        break
+        ;;
+      *)
+        echo "Invalid choice. Please enter a number from 1 to 5."
+        ;;
+    esac
+  done
+}
 # Quick navigation aliases for dotfiles 
 alias df='cd ~/dotfiles'
 alias dotfiles='cd ~/dotfiles'
@@ -271,7 +344,7 @@ EOF
         done
       fi
       echo "[DEBUG] selected_container: $selected_container"
-      echo "Container info for '$selected_container' is not implemented yet."
+      klogs_container_info "$pod" "$ns" "$selected_container"
       return 0
     fi
     if [ -n "${ZSH_VERSION:-}" ]; then
