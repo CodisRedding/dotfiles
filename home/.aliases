@@ -119,7 +119,7 @@ klogs() {
         KLOG_NO_COLOR=1
         shift
         ;;
-      -N|--namespace)
+      -ns|--namespace)
         shift
         if [ -n "$1" ]; then
           KLOG_NAMESPACE="$1"
@@ -166,29 +166,29 @@ klogs() {
 klogs - Stream Kubernetes pod logs for an app, with interactive pod selection and advanced filtering.
 
 USAGE:
-  klogs [ -n | --no-color ] [ -N NS | --namespace NS ] [ -l N | --lines N ] [ -s TERM | --search TERM ]... [<app-name>]
+  klogs [ -n | --no-color ] [ -ns <namespace> | --namespace <namespace> ] [ -l <num of lines> | --lines <num of lines> ] [ -s <term> | --search <term> ]... [<app-name>]
 
 FLAGS:
   -n, --no-color         Disable colored output in pod list and logs
-  -N NS, --namespace NS  Limit search to specified namespace (default: all namespaces)
-  -l N, --lines N        Tail last N lines before streaming logs (default: all)
-  -s TERM, --search TERM Filter logs for TERM (case-insensitive, fixed string). Repeat for multiple terms.
+  -ns <namespace>, --namespace <namespace>  Limit search to specified namespace (default: all namespaces)
+  -l <num of lines>, --lines <num of lines>        Tail last N lines before streaming logs (default: all)
+  -s <term>, --search <term> Filter logs for TERM (case-insensitive, fixed string). Repeat for multiple terms.
   -h, --help             Show this help guide
 
 ARGUMENTS:
   <app-name>             Optional. Substring to match pod names (e.g., sso-proxy). If omitted, shows all pods across all namespaces.
 
 EXAMPLES:
-  klogs                                # Show all pods across all namespaces
-  klogs -N dev                         # Show all pods in 'dev' namespace only
-  klogs sso-proxy                      # Stream all logs for pods matching 'sso-proxy'
-  klogs -N qa sso-proxy                # Stream logs for 'sso-proxy' pods in 'qa' namespace
-  klogs -l 200 sso-proxy               # Tail last 200 lines, then follow logs
-  klogs -s error sso-proxy             # Show only log lines containing 'error'
-  klogs -s error -s warning sso-proxy  # Show log lines containing 'error' OR 'warning'
-  klogs -n -l 100 -s foo sso-proxy     # Disable color, tail 100 lines, filter 'foo'
-  klogs sso-proxy 200                  # (Legacy) Tail 200 lines for 'sso-proxy'
-  klogs sso-proxy error                # (Legacy) Filter logs for 'error'
+  klogs                                 # Show all pods across all namespaces
+  klogs -ns dev                         # Show all pods in 'dev' namespace only
+  klogs sso-proxy                       # Stream all logs for pods matching 'sso-proxy'
+  klogs -ns qa sso-proxy                # Stream logs for 'sso-proxy' pods in 'qa' namespace
+  klogs -l 200 sso-proxy                # Tail last 200 lines, then follow logs
+  klogs -s error sso-proxy              # Show only log lines containing 'error'
+  klogs -s error -s warning sso-proxy   # Show log lines containing 'error' OR 'warning'
+  klogs -n -l 100 -s foo sso-proxy      # Disable color, tail 100 lines, filter 'foo'
+  klogs sso-proxy 200                   # (Legacy) Tail 200 lines for 'sso-proxy'
+  klogs sso-proxy error                 # (Legacy) Filter logs for 'error'
 
 LOG DATA EXAMPLE:
   10.115.155.14 - - [10/Oct/2025:17:01:00 +0000] "GET /api/status HTTP/1.1" 200 60 "-" "curl/7.61.1" "-"
