@@ -166,12 +166,12 @@ klogs() {
 klogs - Stream Kubernetes pod logs for an app, with interactive pod selection and advanced filtering.
 
 USAGE:
-  klogs [ -n | --no-color ] [ -ns <namespace> | --namespace <namespace> ] [ -l <num of lines> | --lines <num of lines> ] [ -s <term> | --search <term> ]... [<app-name>]
+  klogs [ -n | --no-color ] [ -ns <namespace> | --namespace <namespace> ] [ -l <num> | --lines <num> ] [ -s <term> | --search <term> ]... [<app-name>]
 
 FLAGS:
   -n, --no-color         Disable colored output in pod list and logs
   -ns <namespace>, --namespace <namespace>  Limit search to specified namespace (default: all namespaces)
-  -l <num of lines>, --lines <num of lines>        Tail last N lines before streaming logs (default: all)
+  -l <num>, --lines <num>        Tail last N lines before streaming logs (default: all)
   -s <term>, --search <term> Filter logs for TERM (case-insensitive, fixed string). Repeat for multiple terms.
   -h, --help             Show this help guide
 
