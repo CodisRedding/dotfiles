@@ -14,36 +14,53 @@ klogs_container_info() {
   local BLUE=$'\033[1;34m'
   local RED=$'\033[1;31m'
 
-  echo -e "\n${CYAN}========================================${RESET}"
-  echo -e "${CYAN}Container Info:${RESET} ${GREEN}${container}${RESET}"
-  echo -e "Pod: ${CYAN}${pod}${RESET}"
-  echo -e "Namespace: ${CYAN}${ns}${RESET}"
-  echo -e "${CYAN}========================================${RESET}"
-  echo -e "Status: ${GREEN}Running${RESET}"
-  echo -e "Ready: ${GREEN}True${RESET}"
-  echo -e "Restart Count: ${YELLOW}0${RESET}"
-  echo -e "Started At: ${BOLD}2025-09-15T17:25:49Z${RESET}"
-  echo -e ""
-  echo -e "Image: ${MAGENTA}premisehealth-dockerv2-local.jfrog.io/pma-api:master${RESET}"
-  echo -e "Image ID: ${MAGENTA}premisehealth-dockerv2-local.jfrog.io/pma-api@sha256:316fa6811098f9181b100cacb9d34d79b0bc3e0360c63beaeaa65ae087fe74f8${RESET}"
-  echo -e "Container ID: ${CYAN}containerd://12bc7113a3a03065c87c18e306a86dae57266c858ba8370daa3e6cc8a1948c84${RESET}"
-  echo -e ""
-  echo -e "Ports: ${YELLOW}8080/TCP${RESET}"
-  echo -e ""
-  # ...removed Environment Variables section...
-  echo -e "Mounts: ${CYAN}/var/run/secrets/kubernetes.io/serviceaccount${RESET} (from kube-api-access-q4p7d, ro)"
-  echo -e ""
-  echo -e "Pod IP: ${CYAN}172.20.10.217${RESET}"
-  echo -e "Node: ${CYAN}dev-1e6936-worker-1/10.115.155.51${RESET}"
-  echo -e "${CYAN}========================================${RESET}"
+    # Get pod JSON
+    local pod_json
+    pod_json=$(kubectl get pod "$pod" -n "$ns" -o json 2>/dev/null)
+    # Container info block
+    echo -e "\n${CYAN}========================================${RESET}"
+    echo -e "${CYAN}Container Info:${RESET} ${GREEN}${container}${RESET}"
+    echo -e "Pod: ${CYAN}${pod}${RESET}"
+    echo -e "Namespace: ${CYAN}${ns}${RESET}"
+    echo -e "${CYAN}========================================${RESET}"
+    # Status
+    local status ready restart_count started_at image image_id container_id ports mounts pod_ip node
+    status=$(echo "$pod_json" | jq -r '.status.phase // "N/A"')
+    ready=$(echo "$pod_json" | jq -r '.status.containerStatuses[] | select(.name=="'$container'") | .ready // "N/A"')
+    restart_count=$(echo "$pod_json" | jq -r '.status.containerStatuses[] | select(.name=="'$container'") | .restartCount // "N/A"')
+    started_at=$(echo "$pod_json" | jq -r '.status.containerStatuses[] | select(.name=="'$container'") | .state.running.startedAt // .state.terminated.finishedAt // "N/A"')
+    image=$(echo "$pod_json" | jq -r '.spec.containers[] | select(.name=="'$container'") | .image // "N/A"')
+    image_id=$(echo "$pod_json" | jq -r '.status.containerStatuses[] | select(.name=="'$container'") | .imageID // "N/A"')
+    container_id=$(echo "$pod_json" | jq -r '.status.containerStatuses[] | select(.name=="'$container'") | .containerID // "N/A"')
+    ports=$(echo "$pod_json" | jq -r '.spec.containers[] | select(.name=="'$container'") | .ports[]? | ""+(.containerPort|tostring)+"/"+(.protocol) ' | paste -sd ", " -)
+    mounts=$(echo "$pod_json" | jq -r '.spec.containers[] | select(.name=="'$container'") | .volumeMounts[]? | ""+.mountPath+" (from "+.name+", "+(.readOnly|tostring)+")"' | paste -sd ", " -)
+    pod_ip=$(echo "$pod_json" | jq -r '.status.podIP // "N/A"')
+    node=$(echo "$pod_json" | jq -r '.spec.nodeName // "N/A"')
+    # Output with color
+    echo -e "Status: ${GREEN}${status}${RESET}"
+    echo -e "Ready: ${GREEN}${ready}${RESET}"
+    echo -e "Restart Count: ${YELLOW}${restart_count}${RESET}"
+    echo -e "Started At: ${BOLD}${started_at}${RESET}"
+    echo -e ""
+    echo -e "Image: ${MAGENTA}${image}${RESET}"
+    echo -e "Image ID: ${MAGENTA}${image_id}${RESET}"
+    echo -e "Container ID: ${CYAN}${container_id}${RESET}"
+    echo -e ""
+    echo -e "Ports: ${YELLOW}${ports:-N/A}${RESET}"
+    echo -e ""
+    echo -e "Mounts: ${CYAN}${mounts:-N/A}${RESET}"
+    echo -e ""
+    echo -e "Pod IP: ${CYAN}${pod_ip}${RESET}"
+    echo -e "Node: ${CYAN}${node}${RESET}"
+    echo -e "${CYAN}========================================${RESET}"
 
   # Interactive menu for more details
   while true; do
     echo -e "\n${BLUE}More Details (choose one to view, or exit):${RESET}"
-    echo -e "${YELLOW}1.${RESET} View Pod Conditions (placeholder)"
-    echo -e "${YELLOW}2.${RESET} View Volumes (placeholder)"
-    echo -e "${YELLOW}3.${RESET} View Events (placeholder)"
-    echo -e "${YELLOW}4.${RESET} View Environment Variables (placeholder)"
+    echo -e "${YELLOW}1.${RESET} View Pod Conditions"
+    echo -e "${YELLOW}2.${RESET} View Volumes"
+    echo -e "${YELLOW}3.${RESET} View Events"
+    echo -e "${YELLOW}4.${RESET} View Environment Variables"
     echo -e "${RED}5.${RESET} Exit"
     if [ -n "${ZSH_VERSION:-}" ]; then
       read "detail_choice?Enter the number of the detail to view (or 5 to exit): "
@@ -494,11 +511,6 @@ EOF
     "${kub_cmd[@]}"
   fi
 }
-# Usage examples:
-#   klogs sso-proxy            # stream all logs for app pods
-#   klogs sso-proxy 200        # stream last 200 lines then follow
-#   klogs sso-proxy error      # stream logs and show only lines containing 'error'
-#   klogs -n sso-proxy 200 foo # disable coloring, tail 200 lines, filter 'foo'
 
 # Function to check dotfiles status (git and Brewfile)
 _check_dotfiles_status() {

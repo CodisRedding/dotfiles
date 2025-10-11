@@ -110,5 +110,3 @@ bindkey '«' zsh_gh_copilot_suggest  # bind Option+\ to suggest
 # This allows VS Code to provide better terminal integration features.
 # Note: This line is only necessary if you are using the VS Code terminal.
 [[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh)"
-# Added by GitLab Knowledge Graph installer
-## PATH is now set at the top to prioritize Homebrew and local bin

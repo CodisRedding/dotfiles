@@ -13,5 +13,4 @@ export JAVA_HOME="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
 # The MSBuildEnableWorkloadResolver environment variable controls whether MSBuild tries to automatically resolve and install missing .NET workloads
 export MSBuildEnableWorkloadResolver=false # Disable automatic workload installation
 export PATH="$PATH:/Users/rocky.assad/.dotnet/tools" # Add .NET tools to PATH
-# Added by GitLab Knowledge Graph installer
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH" # Added by GitLab Knowledge Graph installer
