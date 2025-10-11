@@ -145,11 +145,3 @@ brew upgrade <formula-or-cask>
 Run these regularly to keep your system and Brewfile dependencies current.
 
 For more details, see the [Homebrew Bundle documentation](https://github.com/Homebrew/homebrew-bundle).
-
-## Automate Setup (Optional)
-
-For advanced users, automate installation and updates with tools like:
-
-- [chezmoi](https://www.chezmoi.io/)
-- [yadm](https://yadm.io/)
-- [dotbot](https://github.com/anishathalye/dotbot)
