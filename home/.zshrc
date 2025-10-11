@@ -45,7 +45,10 @@ setopt HIST_IGNORE_ALL_DUPS # ignore duplicate entries
 setopt HIST_REDUCE_BLANKS # remove superfluous blanks
 
 # omz update reminder
-zstyle ':omz:update' mode reminder 
+zstyle ':omz:update' mode 'auto'
+zstyle ':omz:update' frequency '7' # check for updates every 7 days
+zstyle ':omz:update' use-prompt 'true' # show update prompt in terminal
+zstyle ':omz:update' auto 'true' # auto-update when running `omz update` 
 
 # show waiting dots when completion is delayed
 COMPLETION_WAITING_DOTS="true" 
