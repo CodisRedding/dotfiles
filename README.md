@@ -14,6 +14,9 @@ repo file `home/.zshrc` should be linked to `~/.zshrc` on your machine.
 
 Common files included (examples — check `git ls-files` for the authoritative list):
 
+- `home/bin/genmsg` — Smart commit message generator for dotfiles (used by df-diff, dotpush)
+- `home/funcs/klogs.sh` — Kubernetes pod log and container info shell functions
+- `home/.aliases` — Shell aliases and helper functions (sourced by .zshrc/.bash_profile)
 - `home/.zshrc` — Zsh shell configuration (with plugins, aliases, etc.)
 - `home/.zprofile` — Zsh profile script (login-time environment variables)
 - `home/.bash_profile` — Bash profile script (for Bash compatibility)
@@ -31,6 +34,8 @@ stay at the repo root and are not intended to be symlinked into your home.
 ```text
 dotfiles/
 ├── home/
+│   ├── .aliases
+│   ├── .gitconfig
 │   ├── .zshrc
 │   ├── .zprofile
 │   ├── .bash_profile
@@ -39,6 +44,10 @@ dotfiles/
 │   └── .gitconfig
 ├── scripts/
 │   └── check_dotfiles_symlinks.sh
+├── bin/
+│   └── genmsg
+├── funcs/
+│   └── klogs.sh
 ├── Brewfile
 └── README.md
 ```
