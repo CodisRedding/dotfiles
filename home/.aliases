@@ -69,6 +69,25 @@ alias glprojectl='glab project list' # list projects
 alias glrepo='glab repo view' # view repository
 alias glsearch='glab search' # search in gitlab
 alias glversion='glab version' # show glab version
+alias glwiki='glab wiki view' # view wiki
+alias glwikil='glab wiki list' # list wikis
+alias glwork='glab work' # manage gitlab issues and merge requests from the terminal
+alias glworkas='glab work assign' # assign issue or merge request to a user
+alias glworkcl='glab work close' # close issue or merge request
+alias glworkcm='glab work comment' # comment on issue or merge request
+alias glworkco='glab work close' # close issue or merge request
+alias glworkdue='glab work due' # set or remove due date from issue or merge request
+alias glworkla='glab work label' # add or remove labels from issue or merge request
+alias glworkls='glab work list' # list assigned issues and merge requests
+alias glworkmi='glab work milestone' # set or remove milestone from issue or merge request
+alias glworkmv='glab work move' # move issue or merge request to another project
+alias glworkpr='glab work create' # create issue or merge request
+alias glworkrl='glab work reopen' # reopen issue or merge request
+alias glworkst='glab work state' # view issue or merge request state (open, closed, merged)
+alias glworkun='glab work unassign' # unassign issue or merge request from
+alias glworkup='glab work update' # update issue or merge
+alias glworkv='glab work view' # view issue or merge request
+
 
 # dotfiles directory management
 alias dotfiles='cd ~/dotfiles' # navigate to dotfiles directory
