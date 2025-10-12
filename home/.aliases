@@ -54,7 +54,6 @@ alias glconfig='glab config' # view or edit glab configuration
 alias glgroup='glab group view' # view group
 alias glgroupl='glab group list' # list groups
 alias glhelp='glab help' # show help for glab
-alias glhelp='glab help' # show help for glab
 alias glissue='glab issue create' # create issue
 alias glissuel='glab issue list' # list issues
 alias glissuev='glab issue view' # view issue
@@ -69,7 +68,6 @@ alias glproject='glab project view' # view project
 alias glprojectl='glab project list' # list projects
 alias glrepo='glab repo view' # view repository
 alias glsearch='glab search' # search in gitlab
-alias glversion='glab version' # show glab version
 alias glversion='glab version' # show glab version
 
 # dotfiles directory management
