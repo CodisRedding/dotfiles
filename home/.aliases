@@ -47,7 +47,6 @@ _check_dotfiles_status() {
 # https://gitlab.com/gitlab-org/cli
 alias gl='glab' # shortcut for gitlab cli
 alias glalias='glab alias' # manage glab aliases
-alias glauth='glab auth login' # authenticate with gitlab
 alias glclone='glab repo clone' # clone repository
 alias glcompletion='glab completion' # generate shell completion scripts
 alias glconfig='glab config' # view or edit glab configuration
@@ -57,6 +56,7 @@ alias glhelp='glab help' # show help for glab
 alias glissue='glab issue create' # create issue
 alias glissuel='glab issue list' # list issues
 alias glissuev='glab issue view' # view issue
+alias gllogin='glab auth login' # authenticate with gitlab
 alias gllogout='glab auth logout' # logout from gitlab
 alias glmr='glab mr create' # create merge request
 alias glmrl='glab mr list' # list merge requests
