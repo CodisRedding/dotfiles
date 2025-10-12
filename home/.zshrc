@@ -71,6 +71,9 @@ source $ZSH/oh-my-zsh.sh
 
 # load fzf and fzf-tab only if not in VS Code terminal
 if [[ "$TERM_PROGRAM" != "vscode" ]]; then
+  # load oh-my-zsh
+  # source $ZSH/oh-my-zsh.sh 
+
   # fzf settings
   if command -v fzf &>/dev/null; then
     source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
@@ -84,12 +87,13 @@ if [[ "$TERM_PROGRAM" != "vscode" ]]; then
   zstyle ':completion:*' fzf-preview 'cat {}'
   zstyle ':completion:*' menu select
   # echo "fzf-tab loaded: $ZSH_CUSTOM/plugins/fzf-tab"
+
+  # pure prompt setup
+  zstyle :prompt:pure:git:stash show yes
+  autoload -U promptinit; promptinit 
+  prompt pure 
 fi
 
-# pure prompt setup
-zstyle :prompt:pure:git:stash show yes
-autoload -U promptinit; promptinit 
-prompt pure 
 
 # nvm setup
 export NVM_DIR="$HOME/.nvm"

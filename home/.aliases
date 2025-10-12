@@ -43,6 +43,7 @@ _check_dotfiles_status() {
   return $([ "$issues_found" = "true" ] && echo 1 || echo 0)
 }
 
+alias df='dotfiles' # shortcut to open dotfiles directory
 # Check dotfiles status - shows git and Brewfile warnings if needed
 alias df-check='_check_dotfiles_status true false'
 
