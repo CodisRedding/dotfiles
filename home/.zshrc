@@ -71,9 +71,6 @@ source $ZSH/oh-my-zsh.sh
 
 # load fzf and fzf-tab only if not in VS Code terminal
 if [[ "$TERM_PROGRAM" != "vscode" ]]; then
-  # load oh-my-zsh
-  # source $ZSH/oh-my-zsh.sh 
-
   # fzf settings
   if command -v fzf &>/dev/null; then
     source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
