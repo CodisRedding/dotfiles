@@ -2,6 +2,9 @@
     name = Rocky Assad
     email = rocky.assad@premisehealth.com
     signingkey = D72BA876C648FEE6C0E5D22D33F6AD1F1A0618B0
+[core]
+    autocrlf = input
+    whitespace = trailing-space,space-before-tab
 [pull]
     rebase = false
 [init]

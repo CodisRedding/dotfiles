@@ -87,12 +87,12 @@ if [[ "$TERM_PROGRAM" != "vscode" ]]; then
   zstyle ':completion:*' fzf-preview 'cat {}'
   zstyle ':completion:*' menu select
   # echo "fzf-tab loaded: $ZSH_CUSTOM/plugins/fzf-tab"
-
-  # pure prompt setup
-  zstyle :prompt:pure:git:stash show yes
-  autoload -U promptinit; promptinit 
-  prompt pure 
 fi
+
+# pure prompt setup
+zstyle :prompt:pure:git:stash show yes
+autoload -U promptinit; promptinit 
+prompt pure 
 
 
 # nvm setup
