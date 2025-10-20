@@ -106,7 +106,7 @@ alias glworkv='glab work view' # view issue or merge request
 
 
 # dotfiles directory management
-alias dotfiles='cd ~/dotfiles' # navigate to dotfiles directory
+alias dotfiles='cd ~/code/rocky.assad/dotfiles' # navigate to dotfiles directory
 
 alias df='dotfiles' # shortcut to open dotfiles directory
 # Check dotfiles status - shows git and Brewfile warnings if needed
@@ -117,14 +117,14 @@ alias df-diff='cd ~/dotfiles && echo "=== Git Status ===" && git status --short 
 # Custom Aliases for Zsh
 
 # quick alias to add, commit, and push all changes in dotfiles
-alias dotpush='cd ~/dotfiles && git genmsg --commit --all && git push && cd -'
+alias dotpush='cd ~/code/rocky.assad/dotfiles && git genmsg --commit --all && git push && cd -'
 
 # preview the commit message that dotpush would use without committing
-alias dotpush-dryrun='cd ~/dotfiles && git genmsg && cd -'
+alias dotpush-dryrun='cd ~/code/rocky.assad/dotfiles && git genmsg && cd -'
 
 # quick alias to update Brewfile with current Homebrew/cask/extensions
 # Usage: Run 'brewupdate' to update and overwrite Brewfile with your current setup
-alias brewupdate='brew update && brew upgrade && brew bundle dump --file=~/dotfiles/Brewfile --force'
+alias brewupdate='brew update && brew upgrade && brew bundle dump --file=~/code/rocky.assad/dotfiles/Brewfile --force'
 
 ## aliases
 alias ip='ipconfig getifaddr en0' # get local IP address
