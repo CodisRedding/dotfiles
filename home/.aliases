@@ -1,5 +1,5 @@
 # Source klogs functions if the file exists
-[ -f "$HOME/dotfiles/home/funcs/klogs.sh" ] && source "$HOME/dotfiles/home/funcs/klogs.sh"
+[ -f "$DF_DIR/home/funcs/klogs.sh" ] && source "$DF_DIR/home/funcs/klogs.sh"
 
 _check_npm_packages() {
   local outdated=$(npm outdated -g --json)
@@ -23,8 +23,8 @@ _check_dotfiles_status() {
   local in_dotfiles_dir="${2:-false}"
   local check_session_warn="${3:-false}"
   
-  if [ "$in_dotfiles_dir" = "false" ]; then
-    cd ~/dotfiles
+    if [ "$in_dotfiles_dir" = "false" ]; then
+        cd "$DF_DIR"
   fi
   
   local issues_found=false
@@ -36,13 +36,13 @@ _check_dotfiles_status() {
     if [ "$changes" -gt 0 ]; then
       # Only show if not checking session warning, or if we haven't warned in this session
       if [ "$check_session_warn" = "false" ] || [[ "$_DOTFILES_RELOAD_WARN" != "$$" ]]; then
-        print -P "%F{yellow} $changes uncommitted change(s) in ~/dotfiles. Use 'dotpush'.%f"
+    print -P "%F{yellow} $changes uncommitted change(s) in $DF_DIR. Use 'dotpush'.%f"
         issues_found=true
       fi
     fi
   fi
   
-  if ! brew bundle check --file="$HOME/dotfiles/Brewfile" &>/dev/null; then
+    if ! brew bundle check --file="$DF_DIR/Brewfile" &>/dev/null; then
     print -P "%F{yellow} Your Brewfile is out of sync with installed packages.%f"
     print -P "%F{cyan} Use 'brewupdate' to update your Brewfile, run 'brew outdated' to see what is outdated.%f"
     issues_found=true
@@ -106,25 +106,25 @@ alias glworkv='glab work view' # view issue or merge request
 
 
 # dotfiles directory management
-alias dotfiles='cd ~/code/rocky.assad/dotfiles' # navigate to dotfiles directory
+export DF_DIR="$HOME/code/rocky.assad/dotfiles" # path to dotfiles directory
+alias dotfiles='cd "$DF_DIR"' # navigate to dotfiles directory
 
-alias df='dotfiles' # shortcut to open dotfiles directory
 # Check dotfiles status - shows git and Brewfile warnings if needed
 alias df-check='_check_dotfiles_status true false'
 
 # Show what changes would be committed in dotfiles using smart commit message
-alias df-diff='cd ~/dotfiles && echo "=== Git Status ===" && git status --short && echo && echo "=== Proposed Commit Message ===" && (git genmsg) && cd -'
+alias df-diff='cd "$DF_DIR" && echo "=== Git Status ===" && git status --short && echo && echo "=== Proposed Commit Message ===" && (git genmsg) && cd -'
 # Custom Aliases for Zsh
 
 # quick alias to add, commit, and push all changes in dotfiles
-alias dotpush='cd ~/code/rocky.assad/dotfiles && git genmsg --commit --all && git push && cd -'
+alias dotpush='cd "$DF_DIR" && git genmsg --commit --all && git push && cd -'
 
 # preview the commit message that dotpush would use without committing
-alias dotpush-dryrun='cd ~/code/rocky.assad/dotfiles && git genmsg && cd -'
+alias dotpush-dryrun='cd "$DF_DIR" && git genmsg && cd -'
 
 # quick alias to update Brewfile with current Homebrew/cask/extensions
 # Usage: Run 'brewupdate' to update and overwrite Brewfile with your current setup
-alias brewupdate='brew update && brew upgrade && brew bundle dump --file=~/code/rocky.assad/dotfiles/Brewfile --force'
+alias brewupdate='brew update && brew upgrade && brew bundle dump --file="$DF_DIR/Brewfile" --force'
 
 ## aliases
 alias ip='ipconfig getifaddr en0' # get local IP address

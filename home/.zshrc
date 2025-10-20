@@ -12,16 +12,14 @@ export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
 # Load custom aliases early so we can use functions in startup checks
 [ -f "$HOME/.aliases" ] && source "$HOME/.aliases"
 
-_check_dotfiles_status false true true 
-
 # warn if there are uncommitted changes in dotfiles repo or Brewfile issues (unless disabled)
-# if [[ -z "$DOTFILES_NO_GIT_WARN" ]]; then
-#   (cd "$HOME/code/rocky.assad/dotfiles" && {
-#     if _check_dotfiles_status false true true; then
-#       export _DOTFILES_RELOAD_WARN="$$"
-#     fi
-#   })
-# fi
+if [[ -z "$DOTFILES_NO_GIT_WARN" ]]; then
+  (cd "$DF_DIR" && {
+    if _check_dotfiles_status false true true; then
+      export _DOTFILES_RELOAD_WARN="$$"
+    fi
+  })
+fi
 
 # path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
