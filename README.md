@@ -68,6 +68,20 @@ bash ~/dotfiles/scripts/check_dotfiles_symlinks.sh --dry-run
 bash ~/dotfiles/scripts/check_dotfiles_symlinks.sh --apply
 ```
 
+## DF_DIR environment variable
+
+Some helper scripts and aliases in this repo expect the DF_DIR environment
+variable to point to the root of your cloned dotfiles repository. Set it to
+wherever you cloned the repo, for example:
+
+```sh
+export DF_DIR="$HOME/dotfiles"
+```
+
+This variable is referenced by `home/.aliases`, `home/.zshrc`, and helper
+commands like `dotpush` and `brewupdate` so they can operate regardless of
+your current working directory.
+
 If you prefer to manage a single file manually, point the symlink at the
 corresponding path under `home/`, for example:
 
