@@ -1,6 +1,22 @@
 # Source klogs functions if the file exists
 [ -f "$HOME/dotfiles/home/funcs/klogs.sh" ] && source "$HOME/dotfiles/home/funcs/klogs.sh"
 
+_check_npm_packages() {
+  local outdated=$(npm outdated -g --json)
+  if [ "$outdated" != "{}" ]; then
+    echo "Some global npm packages are outdated:"
+    echo "$outdated" | jq
+  else
+    echo "All global npm packages are up to date."
+  fi
+}
+
+_create_npm_globals_file() {
+    local npm_globals_file="$HOME/Npmfile"
+    npm list -g --depth=0 --json | awk -F ' ' '/@/{print $2}' > "$npm_globals_file"
+    echo "Created npm globals file at $npm_globals_file"
+}
+
 # Function to check dotfiles status (git and Brewfile)
 _check_dotfiles_status() {
   local show_success="${1:-false}"
