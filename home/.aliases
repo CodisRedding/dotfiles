@@ -59,6 +59,14 @@ _check_dotfiles_status() {
   return $([ "$issues_found" = "true" ] && echo 1 || echo 0)
 }
 
+# vscode aliases
+alias c='code .' # open current directory in vscode
+alias cr='code -r' # open file in existing vscode window
+alias crd='code -r .' # open current directory in vscode
+alias cv='code --version' # show vscode version
+
+
+
 # gitlab cli aliases
 # https://gitlab.com/gitlab-org/cli
 alias gl='glab' # shortcut for gitlab cli
