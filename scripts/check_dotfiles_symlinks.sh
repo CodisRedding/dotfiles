@@ -56,10 +56,9 @@ done
 
 
 # List tracked files
-files=$(git ls-files)
+files=$(git ls-files home)
 
-# ignore some repo files that are not dotfiles
-ignore_regex='^(\\.gitignore|README.md|Brewfile|LICENSE)(\\.|$)|^\\.github/|^scripts/'
+ignore_regex=''
 
 ok=()
 not_symlink=()
@@ -210,7 +209,14 @@ for f in $files; do
     if $DRY_RUN; then
       :
     else
+      # create the symlink
       ln -s "$repo_file" "$primary"
+
+      # After creating the symlink
+      # --- Permissions Section: Ensure ~/.ssh/config is always 600 for SSH ---
+      if [ "$primary" = "$HOME/.ssh/config" ]; then
+        chmod 600 "$repo_file"
+      fi
     fi
   fi
 
