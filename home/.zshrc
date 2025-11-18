@@ -93,3 +93,6 @@ fi
 # This allows VS Code to provide better terminal integration features.
 # Note: This line is only necessary if you are using the VS Code terminal.
 [[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh)"
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
