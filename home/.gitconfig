@@ -1,7 +1,14 @@
 [user]
     name = Rocky Assad
-    email = rocky.assad@premisehealth.com
-    signingkey = D72BA876C648FEE6C0E5D22D33F6AD1F1A0618B0
+    useConfigOnly = true
+[include]
+  path = /Users/rocky.assad/.gitconfig.premise
+[includeIf "gitdir:/Users/rocky.assad/code/rocky.assad/**"]
+  path = /Users/rocky.assad/.gitconfig.personal
+[includeIf "gitdir:/Users/rocky.assad/code/workshop/**"]
+  path = /Users/rocky.assad/.gitconfig.premise
+[includeIf "gitdir:/Users/rocky.assad/code/premise-development/**"]
+  path = /Users/rocky.assad/.gitconfig.premise
 [core]
     autocrlf = input
     whitespace = trailing-space,space-before-tab
